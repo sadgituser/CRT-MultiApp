@@ -23,7 +23,7 @@ background_colour, foreground_colour = "#000000", "#00FF00"
 active_background_colour, active_foreground_colour = "#00CC00", "#000000"
 rootWidth, rootHeight = 800, 700
 app_icon = resource_path("app_icon.ico") # Change this to something that makes more sense later
-mainFontFamily = "IBM Plex Mono"
+mainFontFamily = "Consolas"
 bg_music_path = resource_path("bg_music.mp3")
 
 
@@ -70,8 +70,8 @@ def apply_crt_flicker():
     glow_colours = ["#00FF00", "#00DD00", "#22FF22", "#00EE00"]
     chosen_colour = random.choice(glow_colours)
     titleLabel.configure(fg=chosen_colour)
-    descLabel.configure(fg=chosen_colour)
     root.after(random.randint(60, 180), apply_crt_flicker)
+
 
 
 # Fonts
@@ -88,18 +88,9 @@ titleLabel = tk.Label(root,
     wraplength=(rootWidth-25),
     justify="center"
 )
-titleLabel.place(x=(rootWidth // 2), y=15, anchor="n")
+titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
 
 
-descLabel = tk.Label(root,
-    text="TYPE HELP TO BEGIN",
-    font=descFont,
-    bg=background_colour,
-    fg=foreground_colour,
-    wraplength=(rootWidth-25),
-    justify="center"
-)
-descLabel.place(x=(rootWidth // 2), y=75, anchor="n")
 
 # Gamble
 def testLuck():
@@ -161,8 +152,8 @@ termText = tk.Text(root,
     font=descFont, 
     relief="flat"
 )
-termText.place(x=15, y=130, width=(rootWidth - 30), height=(rootHeight - 200))
-termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n ")
+termText.place(x=15, y=80, width=(rootWidth - 30), height=(rootHeight - 200))
+termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> ")
 termText.config(state="disabled")
 
 # Terminal Entry
@@ -188,16 +179,30 @@ termEntry.focus()
 
 def print_term(text):
     termText.config(state="normal")
-    termText.insert("end", text + "\n> ")
-    termText.see("end")
+    termText.insert("end", "\n")
     termText.config(state="disabled")
+
+    def type_chars(remaining_text):
+        termText.config(state="normal")
+        if remaining_text:
+            termText.insert("end", remaining_text[0])
+            termText.see("end")
+            termText.config(state="disabled")
+            root.after(15, lambda: type_chars(remaining_text[1:]))
+        else:
+            termText.insert("end", "\n> ")
+            termText.see("end")
+            termText.config(state="disabled")
+
+    root.after(1000, lambda: type_chars(text))
+
 
 def execute_command(e=None):
     cmd = termEntry.get().strip().lower()
     termEntry.delete(0, "end")
 
     termText.config(state="normal")
-    termText.insert("end", cmd + "\n")
+    termText.insert("end", f"> {cmd}\n")
     termText.config(state="disabled")
 
     # Command Dictionary
@@ -220,7 +225,6 @@ def execute_command(e=None):
         root.destroy()
     else:
         print_term(f"Unknown command: '{cmd}'. Type 'help' for a list of commands!")
-
 
 
 
