@@ -26,7 +26,6 @@ rootWidth, rootHeight = 800, 700
 app_icon = resource_path("app_icon.ico") # Change this to something that makes more sense later
 mainFontFamily = "IBM Plex Mono"
 bg_music_path = resource_path("bg_music.mp3")
-red, green = "#FF0000", "#00FF00"
 
 
 # Music (initialise)
@@ -39,7 +38,10 @@ root.title("Quiz")
 root.geometry(f"{rootWidth}x{rootHeight}+100+100")
 root.resizable(False, False)
 root.configure(bg=background_colour)
-root.iconbitmap(app_icon)
+try:
+    root.iconbitmap(app_icon)
+except:
+    pass
 
 # Fonts
 titleFont = font.Font(family=mainFontFamily, size=28, underline=True, weight="bold")
@@ -75,7 +77,7 @@ def openMePages():
     webbrowser.open_new_tab("mailto:kavi@mistrypi.dev")
 
 meButton = tk.Button(root,
-    text="DEV'S WORKS (LOTS OF TABS)",
+    text="DEV'S WORKS",
     font=buttonFont,
     activebackground=active_background_colour,
     activeforeground=active_foreground_colour,
@@ -85,7 +87,7 @@ meButton = tk.Button(root,
     justify="center",
     relief="raised"
 )
-meButton.place(x=225, y=(rootHeight - 70), anchor="n")
+meButton.place(x=200, y=(rootHeight - 70), anchor="n")
 
 
 closeButton = tk.Button(root,
@@ -99,14 +101,14 @@ closeButton = tk.Button(root,
     justify="center",
     relief="raised"
 )
-closeButton.place(x=475, y=(rootHeight - 70), anchor="n")
+closeButton.place(x=400, y=(rootHeight - 70), anchor="n")
 
 def testLuck():
     luckPopup = tk.Toplevel(root)
     luckPopup.title("TEST YOUR LUCK...")
     luckPopup.geometry("300x300+150+150")
     luckPopup.resizable(False, False)
-    luckPopup.configure(bg=red)
+    luckPopup.configure(bg=background_colour)
     luckPopup.iconbitmap(app_icon)
 
     currentLuck = "FAIL!"
@@ -122,9 +124,7 @@ def testLuck():
     luckLabel.place(x=150, y=125, anchor="n")
 
     def spin_luck():
-        global currentLuck
-        global luckLabel
-
+        nonlocal currentLuck
         if currentLuck == "FAIL!":
             currentLuck = "WIN!"
         else:
@@ -132,16 +132,17 @@ def testLuck():
         luckLabel.configure(text=currentLuck)
     
 
-    for i in range(5, 25):
-        luckPopup.after(50, spin_luck)
+    for i in range(random.randint(5, 30)):
+        luckPopup.after(i * 10, spin_luck)
 
-
-
-
-
-
-
-
+    if currentLuck == "FAIL!":
+        time.sleep(3)
+        messagebox.showerror("You Failed", "You lost the gamble...")
+        os._exit(1)
+    else:
+        time.sleep(3)
+        messagebox.showinfo("You Win", "Your gamble paid off and you get to keep using the app!")
+        luckPopup.destroy()
 
 
 luckButton = tk.Button(root,
@@ -155,15 +156,59 @@ luckButton = tk.Button(root,
     justify="center",
     relief="raised"
 )
-luckButton.place(x=650, y=(rootHeight - 70), anchor="n")
+luckButton.place(x=600, y=(rootHeight - 70), anchor="n")
+
+
+# CRT Effect
+crt_canvas = tk.Canvas(root, width=rootWidth, height=rootHeight, bg=background_colour, highlightthickness=0)
+crt_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+
+# Scan Lines
+for y in range(0, rootHeight, 3):
+    crt_canvas.create_line(0, y, rootWidth, y, fill="#001100", stipple="gray50", tags="scanlines")
+
+# Moving Scanline
+moving_scanline = crt_canvas.create_line(0, 0, rootWidth, 0, fill="#00FF44", width=2, stipple="gray25")
+scanline_y = 0
+
+def animate_crt_beam():
+    global scanline_y
+    scanline_y += 3
+    if scanline_y > rootHeight:
+        scanline_y = 0
+    crt_canvas.coords(moving_scanline, 0, scanline_y, rootWidth, scanline_y)
+    root.after(20, animate_crt_beam)
+animate_crt_beam()
+
+# Fisheye & Curves & Shadows
+# TL Corner
+crt_canvas.create_arc(-100, -100, 200, 200, start=270, extent=90, fill="#050505", outline="")
+crt_canvas.create_oval(10, 10, 40, 25, fill="#003300", outline="")
+#TR Corner
+crt_canvas.create_arc(rootWidth - 200, -100, rootWidth + 100, 200, start=180, extent=90, fill="#050505", outline="")
+crt_canvas.create_oval(rootWidth - 40, 10, rootWidth - 10, 25, fill="#003300", outline="")
+#BL Corner
+crt_canvas.create_arc(-100, rootHeight - 200, 200, rootHeight + 100, start=0, extent=90, fill="#050505", outline="")
+#BR Corner
+crt_canvas.create_arc(rootWidth - 200, rootHeight - 200, rootWidth + 100, rootHeight + 100, start=90, extent=90, fill="#050505", outline="")
+
+# CRT Flicker
+def apply_crt_flicker():
+    glow_colours = ["#00FF00", "#00DD00", "#22FF22", "#00EE00"]
+    chosen_colour = random.choice(glow_colours)
+    titleLabel.configure(fg=chosen_colour)
+    descLabel.configure(fg=chosen_colour)
+    root.after(random.randint(60, 180), apply_crt_flicker)
+apply_crt_flicker()
+
+# Lift buttons to remain in canvas
+meButton.lift()
+closeButton.lift()
+luckButton.lift()
 
 
 
-
-
-
-
-# Add logic for playing music here:
+# Music Logic
 try:
     pygame.mixer.music.load(bg_music_path)
     pygame.mixer.music.set_volume(0.3)
