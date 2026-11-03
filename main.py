@@ -5,7 +5,6 @@ import os
 from tkinter import font, messagebox, filedialog
 from PIL import Image, ImageTk
 import webbrowser
-import time
 import random
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
@@ -43,121 +42,6 @@ try:
 except:
     pass
 
-# Fonts
-titleFont = font.Font(family=mainFontFamily, size=28, underline=True, weight="bold")
-descFont = font.Font(family=mainFontFamily, size=14)
-buttonFont = font.Font(family=mainFontFamily, size=17, underline=True)
-
-# Widgets
-titleLabel = tk.Label(root,
-    text="QUIZ",
-    font=titleFont,
-    bg=background_colour,
-    fg=foreground_colour,
-    wraplength=(rootWidth-25),
-    justify="center"
-)
-titleLabel.place(x=(rootWidth // 2), y=15, anchor="n")
-
-
-descLabel = tk.Label(root,
-    text="INITIALISING QUIZ APP!",
-    font=descFont,
-    bg=background_colour,
-    fg=foreground_colour,
-    wraplength=(rootWidth-25),
-    justify="center"
-)
-descLabel.place(x=(rootWidth // 2), y=75, anchor="n")
-
-
-def openMePages():
-    webbrowser.open_new("https://github.com/sadgituser")
-    webbrowser.open_new_tab("https://theprintedcraftuk.etsy.com")
-    webbrowser.open_new_tab("mailto:kavi@mistrypi.dev")
-
-meButton = tk.Button(root,
-    text="DEV'S WORKS",
-    font=buttonFont,
-    activebackground=active_background_colour,
-    activeforeground=active_foreground_colour,
-    bg=foreground_colour,
-    fg=background_colour,
-    command=openMePages,
-    justify="center",
-    relief="raised"
-)
-meButton.place(x=200, y=(rootHeight - 70), anchor="n")
-
-
-closeButton = tk.Button(root,
-    text="EXIT",
-    font=buttonFont,
-    activebackground=active_background_colour, 
-    activeforeground=active_foreground_colour, 
-    bg=foreground_colour, 
-    fg=background_colour,
-    command=root.destroy,
-    justify="center",
-    relief="raised"
-)
-closeButton.place(x=400, y=(rootHeight - 70), anchor="n")
-
-def testLuck():
-    luckPopup = tk.Toplevel(root)
-    luckPopup.title("TEST YOUR LUCK...")
-    luckPopup.geometry("300x300+150+150")
-    luckPopup.resizable(False, False)
-    luckPopup.configure(bg=background_colour)
-    luckPopup.iconbitmap(app_icon)
-
-    currentLuck = "FAIL!"
-
-    luckLabel = tk.Label(luckPopup,
-        text=currentLuck,
-        font=descFont,
-        bg=background_colour,
-        fg=foreground_colour,
-        wraplength=75,
-        justify="center"
-    )
-    luckLabel.place(x=150, y=125, anchor="n")
-
-    def spin_luck():
-        nonlocal currentLuck
-        if currentLuck == "FAIL!":
-            currentLuck = "WIN!"
-        else:
-            currentLuck = "FAIL!"
-        luckLabel.configure(text=currentLuck)
-    
-
-    for i in range(random.randint(5, 30)):
-        luckPopup.after(i * 10, spin_luck)
-
-    if currentLuck == "FAIL!":
-        time.sleep(3)
-        messagebox.showerror("You Failed", "You lost the gamble...")
-        os._exit(1)
-    else:
-        time.sleep(3)
-        messagebox.showinfo("You Win", "Your gamble paid off and you get to keep using the app!")
-        luckPopup.destroy()
-
-
-luckButton = tk.Button(root,
-    text="TEST YOUR LUCK",
-    font=buttonFont,
-    activebackground=active_background_colour,
-    activeforeground=active_foreground_colour,
-    bg=foreground_colour,
-    fg=background_colour,
-    command=testLuck,
-    justify="center",
-    relief="raised"
-)
-luckButton.place(x=600, y=(rootHeight - 70), anchor="n")
-
 
 # CRT Effect
 crt_canvas = tk.Canvas(root, width=rootWidth, height=rootHeight, bg=background_colour, highlightthickness=0)
@@ -180,17 +64,6 @@ def animate_crt_beam():
     root.after(20, animate_crt_beam)
 animate_crt_beam()
 
-# Fisheye & Curves & Shadows
-# TL Corner
-crt_canvas.create_arc(-100, -100, 200, 200, start=270, extent=90, fill="#050505", outline="")
-crt_canvas.create_oval(10, 10, 40, 25, fill="#003300", outline="")
-#TR Corner
-crt_canvas.create_arc(rootWidth - 200, -100, rootWidth + 100, 200, start=180, extent=90, fill="#050505", outline="")
-crt_canvas.create_oval(rootWidth - 40, 10, rootWidth - 10, 25, fill="#003300", outline="")
-#BL Corner
-crt_canvas.create_arc(-100, rootHeight - 200, 200, rootHeight + 100, start=0, extent=90, fill="#050505", outline="")
-#BR Corner
-crt_canvas.create_arc(rootWidth - 200, rootHeight - 200, rootWidth + 100, rootHeight + 100, start=90, extent=90, fill="#050505", outline="")
 
 # CRT Flicker
 def apply_crt_flicker():
@@ -199,12 +72,155 @@ def apply_crt_flicker():
     titleLabel.configure(fg=chosen_colour)
     descLabel.configure(fg=chosen_colour)
     root.after(random.randint(60, 180), apply_crt_flicker)
-apply_crt_flicker()
 
-# Lift buttons to remain in canvas
-meButton.lift()
-closeButton.lift()
-luckButton.lift()
+
+# Fonts
+titleFont = font.Font(family=mainFontFamily, size=28, underline=True, weight="bold")
+descFont = font.Font(family=mainFontFamily, size=14)
+buttonFont = font.Font(family=mainFontFamily, size=17, underline=True)
+
+# Widgets
+titleLabel = tk.Label(root,
+    text="THE CRT...",
+    font=titleFont,
+    bg=background_colour,
+    fg=foreground_colour,
+    wraplength=(rootWidth-25),
+    justify="center"
+)
+titleLabel.place(x=(rootWidth // 2), y=15, anchor="n")
+
+
+descLabel = tk.Label(root,
+    text="TYPE HELP TO BEGIN",
+    font=descFont,
+    bg=background_colour,
+    fg=foreground_colour,
+    wraplength=(rootWidth-25),
+    justify="center"
+)
+descLabel.place(x=(rootWidth // 2), y=75, anchor="n")
+
+# Gamble
+def testLuck():
+    luckPopup = tk.Toplevel(root)
+    luckPopup.title("TEST YOUR LUCK...")
+    luckPopup.geometry("300x300+150+150")
+    luckPopup.resizable(False, False)
+    luckPopup.configure(bg=background_colour)
+    try:
+        luckPopup.iconbitmap(app_icon)
+    except:
+        pass
+
+    currentLuck = "FAIL!"
+
+    luckLabel = tk.Label(luckPopup,
+        text=currentLuck,
+        font=titleFont,
+        bg=background_colour,
+        fg=foreground_colour,
+        wraplength=250,
+        justify="center"
+    )
+    luckLabel.place(x=150, y=125, anchor="n")
+
+    def spin_luck():
+        nonlocal currentLuck
+        currentLuck = "WIN!" if currentLuck == "FAIL!" else "FAIL!"
+        luckLabel.configure(text=currentLuck)
+    
+    currentRanNum = random.randint(5, 25)
+
+    for i in range(currentRanNum):
+        luckPopup.after(i * 100, spin_luck)
+
+    def finish_luck():
+        if currentLuck == "FAIL!":
+            messagebox.showerror("You Failed", "You lost the gamble...")
+            luckPopup.destroy()
+            root.destroy()
+        else:
+            messagebox.showinfo("You Win", "Your gamble paid off!")
+            luckPopup.destroy()
+
+    luckPopup.after(((currentRanNum * 100) + 100), finish_luck)
+
+
+def openMePages():
+    webbrowser.open_new("https://github.com/sadgituser")
+    webbrowser.open_new_tab("https://theprintedcraftuk.etsy.com")
+    webbrowser.open_new_tab("mailto:kavi@mistrypi.dev")
+
+
+# Terminal Output Box
+termText = tk.Text(root, 
+    bg="#000500", 
+    fg=foreground_colour, 
+    insertbackground=foreground_colour, 
+    font=descFont, 
+    relief="flat"
+)
+termText.place(x=15, y=130, width=(rootWidth - 30), height=(rootHeight - 200))
+termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n ")
+termText.config(state="disabled")
+
+# Terminal Entry
+promptLabel = tk.Label(root, 
+    text=">",
+    font=descFont,
+    bg=background_colour,
+    fg=foreground_colour
+)
+promptLabel.place(x=15, y=(rootHeight - 55))
+
+termEntry = tk.Entry(root,
+    bg=background_colour,
+    fg=foreground_colour,
+    insertbackground=foreground_colour,
+    font=descFont,
+    relief="flat",
+    highlightthickness=1,
+    highlightbackground=foreground_colour
+)
+termEntry.place(x=35, y=(rootHeight - 55), width=(rootWidth - 50), height=30)
+termEntry.focus()
+
+def print_term(text):
+    termText.config(state="normal")
+    termText.insert("end", text + "\n> ")
+    termText.see("end")
+    termText.config(state="disabled")
+
+def execute_command(e=None):
+    cmd = termEntry.get().strip().lower()
+    termEntry.delete(0, "end")
+
+    termText.config(state="normal")
+    termText.insert("end", cmd + "\n")
+    termText.config(state="disabled")
+
+    # Command Dictionary
+    if cmd == "help":
+        print_term("Commands: start, luck, clear, about, exit")
+    elif cmd == "start":
+        print_term("Starting Quiz Module... (Coming Soon!)")
+    elif cmd == "luck":
+        print_term("Opening Lucky Gamble...")
+        testLuck()
+    elif cmd == "clear" or cmd == "cls":
+        termText.config(state="normal")
+        termText.delete("1.0", "end")
+        termText.config(state="disabled")
+        print_term("")
+    elif cmd == "about":
+        print_term("Terra Python CRT/QUIZ App!")
+        openMePages()
+    elif cmd == "exit":
+        root.destroy()
+    else:
+        print_term(f"Unknown command: '{cmd}'. Type 'help' for a list of commands!")
+
 
 
 
@@ -218,4 +234,6 @@ except Exception as e:
 
 
 # Initialise main window
+apply_crt_flicker()
+termEntry.bind("<Return>", execute_command)
 root.mainloop()
