@@ -27,6 +27,8 @@ mainFontFamily = "Consolas"
 bg_music_path = resource_path("bg_music.mp3")
 players = []
 questions = []
+print_queue = []
+is_printing = False
 
 
 # Music (initialise)
@@ -72,8 +74,9 @@ def apply_crt_flicker():
     glow_colours = ["#00FF00", "#00DD00", "#22FF22", "#00EE00"]
     chosen_colour = random.choice(glow_colours)
     titleLabel.configure(fg=chosen_colour)
+    termText.configure(fg=chosen_colour)
+    termEntry.configure(fg=chosen_colour)
     root.after(random.randint(60, 180), apply_crt_flicker)
-
 
 
 # Fonts
@@ -180,7 +183,15 @@ termEntry.place(x=35, y=(rootHeight - 55), width=(rootWidth - 50), height=30)
 termEntry.focus()
 
 # Print to the Terminal
-def print_term(text):
+def process_print_queue():
+    global is_printing
+    if not print_queue:
+        is_printing = False
+        return
+
+    is_printing = True
+    text_to_print = print_queue.pop(0)
+
     termText.config(state="normal")
     termText.insert("end", "\n")
     termText.config(state="disabled")
@@ -191,13 +202,24 @@ def print_term(text):
             termText.insert("end", remaining_text[0])
             termText.see("end")
             termText.config(state="disabled")
-            root.after(30, lambda: type_chars(remaining_text[1:]))
+            root.after(25, lambda: type_chars(remaining_text[1:]))
         else:
-            termText.insert("end", "\n> ")
+            termText.config(state="normal")
+            if print_queue:
+                pass
+            else:
+                termText.insert("end", "\n> ")
             termText.see("end")
             termText.config(state="disabled")
+            process_print_queue()
 
-    root.after(1000, lambda: type_chars(text))
+    root.after(100, lambda: type_chars(text_to_print))
+
+def print_term(text):
+    global is_printing
+    print_queue.append(text)
+    if not is_printing:
+        process_print_queue()
 
 
 # Terminal Commands
@@ -235,8 +257,8 @@ def show_playerlist():
     else:
         player_output = "Player List:\n"
         for player in players:
-            player_output != f"- {player}\n"
-        print_term(player_output.strip(), "\n")
+            player_output += f"- {player}\n"
+        print_term(player_output.strip())
 
 def show_questionlist():
     if not questions:
@@ -245,44 +267,61 @@ def show_questionlist():
         question_output = "Question List:\n"
         for q in questions:
             question_output += f"- {q}\n"
-        print_term(question_output.strip(), "\n")
+        print_term(question_output.strip())
+
+def preface_quiz():
+    msg = "Checking quiz requirements... \n"
+    if questions and players:
+        "Questions and players loaded... \nQuiz ready"
+    elif questions and not players:
+        msg += "Questions loaded \nPlayers still to be loaded"
+    elif players and not questions:
+        msg += "Players loaded \nQuestions still to be loaded"
+    else:
+        msg += "Nothing loaded \nPlease load files"
+    print_term(msg)
+
 
 
 # Execute Terminal Commands
 def execute_command(e=None):
-    cmd = termEntry.get().strip().lower()
+    raw_cmd = termEntry.get().strip().lower()
     termEntry.delete(0, "end")
 
     termText.config(state="normal")
-    termText.insert("end", f"{cmd}")
+    termText.insert("end", f"{raw_cmd}")
     termText.config(state="disabled")
+
+    sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
 
     # Command Dictionary
     commands = {
-        "help": lambda: print_term("Commands: quiz, rickroll, luck, clear, about, exit \n"),
-        "quiz": lambda: print_term("Available commands: player, question, start, preface \n"),
-        "quiz preface": lambda: (print_term("Checking Quiz Requirements... (Coming Soon!)")),
-        "quiz start": (lambda: print_term("Starting Quiz... (Coming Soon!)")),
-        "quiz player": lambda: (print_term("Available commands: load, lookup")),
-        "quiz question": lambda: (print_term("Available commands: load, lookup")),
+        "help": lambda: print_term("Commands: quiz, rickroll, luck, clear, cls, about, exit \n"),
+        "quiz": lambda: (print_term("Available commands: player, question, start, preface \nCommands for this must start with 'quiz '\n"), termEntry.insert(tk.END, "quiz ")),
+        "quiz preface": lambda: preface_quiz(),
+        "quiz start": (lambda: print_term("Starting Quiz... (Coming Soon!) \n")),
+        "quiz player": lambda: (print_term("Available commands: load, lookup \nCommands for this must start with 'quiz player '\n"), termEntry.insert(tk.END, "quiz player ")),
+        "quiz question": lambda: (print_term("Available commands: load, lookup \nCommands for this must start with 'quiz question '\n"), termEntry.insert(tk.END, "quiz question ")),
         "quiz player load": lambda: (print_term("Loading playerlist.txt"), load_playerlist()),
         "quiz question load": lambda: (print_term("Loading questionlist.txt"), load_questionlist()),
         "quiz player lookup": lambda: (show_playerlist()),
         "quiz question lookup": lambda: (show_questionlist()),
-        "rickroll": lambda: (print_term("RICKROLL"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
+        "rickroll": lambda: (print_term("RICKROLL!"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble... \n"), testLuck()),
-        "clear": lambda: clear_term(),
-        "cls": lambda: clear_term(),
+        "clear": lambda: (clear_term(), termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> ")),
+        "cls": lambda: (clear_term(), termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> ")),
         "about": lambda: (print_term("Terra CRT App! \n"), openMePages()),
         "exit": root.destroy
     }
 
-    if cmd in commands:
-        commands[cmd]()
-    else:
-        print_term(f"Unknown command: '{cmd}'. Type 'help' for a list of commands! \n")
-    
+    for cmd in sub_commands:
+        if cmd in commands:
+            commands[cmd]()
+        else:
+            print_term(f"Unknown command: '{cmd}'. Type 'help' for a list of commands! \n")
+            break
 
+    
 
 
 # Music Logic
@@ -298,3 +337,19 @@ except Exception as e:
 apply_crt_flicker()
 termEntry.bind("<Return>", execute_command)
 root.mainloop()
+
+# Things/Ideas to add:
+    # A syntax menu showing how to write commands
+    # A command ask menu detailing how a command works
+    # An optional AI to have it generate questions for you
+    # Default player (Player 1, Player 2 etc.) and Questions files
+    # More fun menus and commands
+    # Actual quiz funstionality
+    # The time in the corner
+    # A new iconbitmap (and accompanying .png made in Aseprite - Terminal)
+    # Put the app logo in more places
+    # Suggest a feature command (takes to GitHub issue template)
+    # Report a bug command (takes to GitHub issue template)
+    # Disable/Enable scanline option
+    # Disable/Enable text option
+    # More ideas to come later!
