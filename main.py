@@ -29,6 +29,21 @@ players = []
 questions = []
 print_queue = []
 is_printing = False
+quiz_ready = False
+quiz_settings = {
+    "rand_questions": False,
+    "rand_players": False,
+    "time_limit": 15,
+    "default_skips": 2,
+    "default_last_chance": True
+}
+quiz_active_players = []
+quiz_active_questions = []
+current_player_idx = 0
+current_question_idx = 0
+current_timer_id = None
+time_remaining = 0
+waiting_for_next = False
 
 
 # Music (initialise)
@@ -270,16 +285,37 @@ def show_questionlist():
         print_term(question_output.strip())
 
 def preface_quiz():
+    global quiz_ready
     msg = "Checking quiz requirements... \n"
     if questions and players:
         "Questions and players loaded... \nQuiz ready"
+        quiz_ready = True
     elif questions and not players:
         msg += "Questions loaded \nPlayers still to be loaded"
+        quiz_ready = False
     elif players and not questions:
         msg += "Players loaded \nQuestions still to be loaded"
+        quiz_ready = False
     else:
         msg += "Nothing loaded \nPlease load files"
+        quiz_ready = False
     print_term(msg)
+
+def show_syntax():
+    syn = "To use basic commands (such as 'rickroll' or 'exit'), just type the command. For more complex commands like 'quiz', type in 'quiz', followed by a space and then the next command suggested by 'Available commands'"
+    print_term(syn)
+
+quiz_setup_step = 0
+
+def start_quiz_setup():
+    global quiz_ready, quiz_setup_step
+    if quiz_ready == False:
+        print_term("Run 'quiz preface' first")
+        return
+    quiz_setup_step = 1
+    print_term("-- QUIZ SETTINGS INITIALISATION --\nRandomise question order? (y/n):")
+
+
 
 
 
@@ -296,16 +332,17 @@ def execute_command(e=None):
 
     # Command Dictionary
     commands = {
-        "help": lambda: print_term("Commands: quiz, rickroll, luck, clear, cls, about, exit \n"),
+        "help": lambda: print_term("Commands: quiz, syntax, rickroll, luck, clear, cls, about, exit \n"),
         "quiz": lambda: (print_term("Available commands: player, question, start, preface \nCommands for this must start with 'quiz '\n"), termEntry.insert(tk.END, "quiz ")),
         "quiz preface": lambda: preface_quiz(),
-        "quiz start": (lambda: print_term("Starting Quiz... (Coming Soon!) \n")),
+        "quiz start": lambda: (print_term("Starting Quiz... \n"), start_quiz_setup),
         "quiz player": lambda: (print_term("Available commands: load, lookup \nCommands for this must start with 'quiz player '\n"), termEntry.insert(tk.END, "quiz player ")),
         "quiz question": lambda: (print_term("Available commands: load, lookup \nCommands for this must start with 'quiz question '\n"), termEntry.insert(tk.END, "quiz question ")),
         "quiz player load": lambda: (print_term("Loading playerlist.txt"), load_playerlist()),
         "quiz question load": lambda: (print_term("Loading questionlist.txt"), load_questionlist()),
         "quiz player lookup": lambda: (show_playerlist()),
         "quiz question lookup": lambda: (show_questionlist()),
+        "syntax": lambda: (show_syntax()),
         "rickroll": lambda: (print_term("RICKROLL!"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble... \n"), testLuck()),
         "clear": lambda: (clear_term(), termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> ")),
@@ -320,6 +357,48 @@ def execute_command(e=None):
         else:
             print_term(f"Unknown command: '{cmd}'. Type 'help' for a list of commands! \n")
             break
+
+    def handle_quiz_setup_input(raw_cmd):
+        global quiz_setup_step, quiz_settings
+        if quiz_setup_step == 1:
+            quiz_settings["rand_questions"] == (raw_cmd == 'y')
+            quiz_setup_step = 2
+            print_term("Randomise player order? (y/n):")
+        elif quiz_setup_step == 2:
+            quiz_settings["rand_players"] = (raw_cmd == 'y')
+            quiz_setup_step = 3
+            print_term("Enter time limit per question (seconds):")
+        elif quiz_setup_step == 3:
+            try:
+                quiz_settings["time_limit"] = int(raw_cmd)
+            except ValueError:
+                quiz_settings["time_limit"] = 15
+            quiz_setup_step = 4
+            print_term("Enter default skips allowed per player:")
+        elif quiz_setup_step == 4:
+            try:
+                quiz_settings["default_skips"] = int(raw_cmd)
+            except ValueError:
+                quiz_settings["default_skips"] = 2
+            quiz_setup_step = 5
+            print_term("Enable default last chance on timeout? (y/n):")
+        elif quiz_setup_step == 5:
+            quiz_settings["default_last_chance"] = (raw_cmd == 'y')
+            quiz_setup_step = 0
+            print_term("Settings applied. Starting quiz...")
+            begin_quiz_execution()
+
+    def begin_quiz_execution()
+
+
+
+
+
+
+
+
+
+
 
     
 
