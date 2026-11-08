@@ -341,13 +341,13 @@ def preface_quiz():
         msg += "Questions and players loaded... \nQuiz ready\n"
         quiz_ready = True
     elif questions and not players:
-        msg += "Questions loaded \nPlayers still to be loaded, load questions with 'quiz question load'"
+        msg += "Questions loaded \nPlayers still to be loaded, load questions with 'quiz question load'\n"
         quiz_ready = False
     elif players and not questions:
-        msg += "Players loaded \nQuestions still to be loaded, load players with 'quiz player load'"
+        msg += "Players loaded \nQuestions still to be loaded, load players with 'quiz player load'\n"
         quiz_ready = False
     else:
-        msg += "Nothing loaded \nPlease load files by typing 'quiz player load' and 'quiz question load'"
+        msg += "Nothing loaded \nPlease load files by typing 'quiz player load' and 'quiz question load'\n"
         quiz_ready = False
     print_term(msg)
 
@@ -438,29 +438,29 @@ def load_default_questions():
 def handle_quiz_setup_input(raw_cmd):
     global quiz_setup_step, quiz_settings
     if quiz_setup_step == 1:
-        quiz_settings["rand_questions"] = (raw_cmd == 'y')
+        quiz_settings['rand_questions'] = (raw_cmd == 'y')
         quiz_setup_step = 2
         print_term("Randomise player order? (y/n):")
     elif quiz_setup_step == 2:
-        quiz_settings["rand_players"] = (raw_cmd == 'y')
+        quiz_settings['rand_players'] = (raw_cmd == 'y')
         quiz_setup_step = 3
         print_term("Enter time limit per question (seconds):")
     elif quiz_setup_step == 3:
         try:
-            quiz_settings["time_limit"] = int(raw_cmd)
+            quiz_settings['time_limit'] = int(raw_cmd)
         except ValueError:
-            quiz_settings["time_limit"] = 15
+            quiz_settings['time_limit'] = 15
         quiz_setup_step = 4
         print_term("Enter default skips allowed per player:")
     elif quiz_setup_step == 4:
         try:
-            quiz_settings["default_skips"] = int(raw_cmd)
+            quiz_settings['default_skips'] = int(raw_cmd)
         except ValueError:
-            quiz_settings["default_skips"] = 2
+            quiz_settings['default_skips'] = 2
         quiz_setup_step = 5
         print_term("Enable default last chance on timeout? (y/n):")
     elif quiz_setup_step == 5:
-        quiz_settings["default_last_chance"] = (raw_cmd == 'y')
+        quiz_settings['default_last_chance'] = (raw_cmd == 'y')
         quiz_setup_step = 0
         print_term("Settings applied. Starting quiz...")
         begin_quiz_execution()
@@ -472,16 +472,16 @@ def begin_quiz_execution():
 
     quiz_active_players = [{
         "name": p,
-        "skips": quiz_settings["default_skips"],
+        "skips": quiz_settings['default_skips'],
         "eliminated": False,
         "last_chance": False
     } for p in players]
 
-    if quiz_settings["rand_players"]:
+    if quiz_settings['rand_players']:
         random.shuffle(quiz_active_players)
 
     quiz_active_questions = list(questions)
-    if quiz_settings["rand_questions"]:
+    if quiz_settings['rand_questions']:
         random.shuffle(quiz_active_questions)
 
     current_player_idx = 0
@@ -512,7 +512,7 @@ def show_next_quiz_turn():
     is_paused = False
     quizPauseButton.config(text="PAUSE")
 
-    active_remaining = [p for p in quiz_active_players if not p["eliminated"]]
+    active_remaining = [p for p in quiz_active_players if not p['eliminated']]
     if len(active_remaining) == 1:
         show_winner_screen(active_remaining[0]["name"])
         return
@@ -522,10 +522,10 @@ def show_next_quiz_turn():
 
     if current_question_idx >= len(quiz_active_questions):
         current_question_idx = 0
-        if quiz_settings["rand_questions"]:
+        if quiz_settings['rand_questions']:
             random.shuffle(quiz_active_questions)
 
-    while quiz_active_players[current_player_idx]["eliminated"]:
+    while quiz_active_players[current_player_idx]['eliminated']:
         current_player_idx = (current_player_idx + 1) % len(quiz_active_players)
 
     player = quiz_active_players[current_player_idx]
@@ -536,7 +536,7 @@ def show_next_quiz_turn():
     quizPauseButton.place_forget()
     quizQuitButton.place_forget()
 
-    quizPlayerLabel.config(text=player["name"], fg=foreground_colour, font=playerFont)
+    quizPlayerLabel.config(text=player['name'], fg=foreground_colour, font=playerFont)
     quizPlayerLabel.place(x=(rootWidth // 2), y=30, anchor="n")
 
     status_text = f"Skips Left: {player['skips']} | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
@@ -555,12 +555,12 @@ def start_actual_question():
     player = quiz_active_players[current_player_idx]
     question = quiz_active_questions[current_question_idx]
 
-    quizPlayerLabel.config(text=player["name"], fg=foreground_colour, font=playerFont)
+    quizPlayerLabel.config(text=player['name'], fg=foreground_colour, font=playerFont)
     quizPlayerLabel.place(x=(rootWidth // 2), y=15, anchor="n")
     quizQuestionLabel.config(text=question, fg=foreground_colour, font=questionFont)
     quizQuestionLabel.place(x=(rootWidth // 2), y=120, anchor="n")
 
-    status_text = f"Skips Left: {player["skips"]} | Last Chance: {"FINAL CHANCE" if player["last_chance"] else "NO"}"
+    status_text = f"Skips Left: {player['skips']} | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
     quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
     quizStatusLabel.place(x=(rootWidth // 2), y=280, anchor="n")
 
@@ -568,7 +568,7 @@ def start_actual_question():
         root.after_cancel(current_timer_id)
         current_timer_id = None
 
-    time_remaining = quiz_settings["time_limit"]
+    time_remaining = quiz_settings['time_limit']
     quizTimerLabel.config(text=f"Time: {time_remaining}s", fg=foreground_colour, font=timerFont)
     quizTimerLabel.place(x=(rootWidth // 2), y=360, anchor="n")
 
@@ -592,10 +592,10 @@ def update_quiz_timer():
 def handle_timeout():
     player = quiz_active_players[current_player_idx]
     flash_screen("#FFA500", "TIME OUT")
-    if quiz_settings["default_last_chance"] and not player["last_chance"]:
-        player["last_chance"] = True
+    if quiz_settings['default_last_chance'] and not player['last_chance']:
+        player['last_chance'] = True
     else:
-        player["eliminated"] = True
+        player['eliminated'] = True
     prepare_for_next_turn()
 
 def flash_screen(colour, message):
@@ -667,21 +667,21 @@ def handle_quiz_keypress(event):
         flash_screen("#00FF00", "CORRECT")
         prepare_for_next_turn()
     elif key == 'i':
-        if quiz_settings["default_last_chance"] and not player["last_chance"]:
-            player["last_chance"] = True
+        if quiz_settings['default_last_chance'] and not player['last_chance']:
+            player['last_chance'] = True
             flash_screen("#8B0000", "INCORRECT & LAST CHANCE")
         else:
-            player["eliminated"] = True
+            player['eliminated'] = True
             flash_screen("#8B0000", "INCORRECT & ELIMINATED")
     elif key == 'p':
         if player['skips'] > 0:
-            player["skips"] -= 1
+            player['skips'] -= 1
             flash_screen("#FFFFFF", "SKIPPED")
             prepare_for_next_turn()
     elif key == 'q':
-        if not player["last_chance"]:
-            player["skips"] = 0
-            player["last_chance"] = True
+        if not player['last_chance']:
+            player['skips'] = 0
+            player['last_chance'] = True
             time_remaining += 5
             is_last_chance_action = True
             quizTimerLabel.config(text=f"Time: {time_remaining}")
@@ -838,12 +838,3 @@ root.bind("<Configure>", on_window_resize)
 apply_crt_flicker()
 termEntry.bind("<Return>", execute_command)
 root.mainloop()
-
-# Things/Ideas to add:
-    # An optional AI to have it generate questions for you
-    # More fun menus and commands
-    # A new iconbitmap (and accompanying .png made in Aseprite - Terminal)
-    # Put the app logo in more places
-    # Disable/Enable scanline option
-    # Disable/Enable text_chars delay option
-    # More ideas to come later!

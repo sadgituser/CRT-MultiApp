@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Windows-x64" --add-data "Assets;Assets" main.py
+          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Windows-x64" --icon="Assets/app-icon.ico" --add-data "Assets;Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-macOS-ARM64" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --windowed --name "Quiz-macOS-ARM64" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -85,7 +85,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-Ubuntu" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-Ubuntu" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -113,7 +113,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-Arch" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-Arch" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -141,7 +141,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-RedHat" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-RedHat" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
