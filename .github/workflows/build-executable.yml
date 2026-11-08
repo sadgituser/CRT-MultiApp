@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Windows-x64" --icon="Assets/app-icon.ico" --add-data "Assets;Assets" main.py
+          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Windows-x64" --icon="Assets/app_icon.ico" --add-data "Assets;Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-macOS-ARM64" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --windowed --name "Quiz-macOS-ARM64" --icon="Assets/app-icon.icns" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
