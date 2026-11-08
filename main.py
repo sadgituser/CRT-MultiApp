@@ -44,6 +44,7 @@ current_question_idx = 0
 current_timer_id = None
 time_remaining = 0
 waiting_for_next = False
+is_paused = False
 
 
 # Music (initialise)
@@ -98,6 +99,12 @@ def apply_crt_flicker():
 titleFont = font.Font(family=mainFontFamily, size=28, underline=True, weight="bold")
 descFont = font.Font(family=mainFontFamily, size=14)
 buttonFont = font.Font(family=mainFontFamily, size=17, underline=True)
+playerFont = font.Font(family=mainFontFamily, size=36, weight="bold", underline=True)
+questionFont = font.Font(family=mainFontFamily, size=18, weight="bold")
+timerFont = font.Font(family=mainFontFamily, size=16, weight="bold")
+statusFont = font.Font(family=mainFontFamily, size=14)
+winnerFont = font.Font(family=mainFontFamily, size=42, underline=True, weight="bold")
+
 
 # Widgets
 titleLabel = tk.Label(root,
@@ -199,26 +206,26 @@ termEntry.focus()
 
 
 quizPlayerLabel = tk.Label(root, 
-    font=titleFont, 
+    font=playerFont, 
     bg=background_colour, 
     fg=foreground_colour, 
     justify="center"
 )
 quizQuestionLabel = tk.Label(root, 
-    font=descFont, 
+    font=questionFont, 
     bg=background_colour, 
     fg=foreground_colour, 
     wraplength=(rootWidth - 50), 
     justify="center"
 )
 quizTimerLabel = tk.Label(root, 
-    font=descFont, 
+    font=timerFont, 
     bg=background_colour, 
     fg=foreground_colour, 
     justify="center"
 )
 quizStatusLabel = tk.Label(root, 
-    font=descFont, 
+    font=statusFont, 
     bg=background_colour, 
     fg=foreground_colour, 
     justify="center"
@@ -316,16 +323,16 @@ def preface_quiz():
     global quiz_ready
     msg = "Checking quiz requirements... \n"
     if questions and players:
-        "Questions and players loaded... \nQuiz ready"
+        msg += "Questions and players loaded... \nQuiz ready"
         quiz_ready = True
     elif questions and not players:
-        msg += "Questions loaded \nPlayers still to be loaded"
+        msg += "Questions loaded \nPlayers still to be loaded, load questions with 'quiz question load'"
         quiz_ready = False
     elif players and not questions:
-        msg += "Players loaded \nQuestions still to be loaded"
+        msg += "Players loaded \nQuestions still to be loaded, load players with 'quiz player load'"
         quiz_ready = False
     else:
-        msg += "Nothing loaded \nPlease load files"
+        msg += "Nothing loaded \nPlease load files by typing 'quiz player load' and 'quiz question load'"
         quiz_ready = False
     print_term(msg)
 
@@ -333,6 +340,8 @@ def show_syntax():
     syn = "To use basic commands (such as 'rickroll' or 'exit'), just type the command. For more complex commands like 'quiz', type in 'quiz', followed by a space and then the next command suggested by 'Available commands'"
     print_term(syn)
 
+
+# Quiz Components
 quiz_setup_step = 0
 
 def start_quiz_setup():
@@ -343,12 +352,63 @@ def start_quiz_setup():
     quiz_setup_step = 1
     print_term("-- QUIZ SETTINGS INITIALISATION --\nRandomise question order? (y/n):")
 
-
-
-
-
 winner_flashing = False
 winner_timer_id = None
+
+def toggle_pause():
+    global is_paused, current_timer_id
+    if waiting_for_next:
+        return
+
+    is_paused = not is_paused
+    if is_paused:
+        if current_timer_id:
+            root.after_cancel(current_timer_id)
+            current_timer_id = None
+        quizPauseButton.config(text="RESUME")
+    else:
+        quizPauseButton.config(text="PAUSE")
+        current_timer_id = root.after(1000, update_quiz_timer)
+
+def force_quit_quiz():
+    global current_timer_id, quiz_setup_step, waiting_for_next, is_paused
+    if current_timer_id:
+        root.after_cancel(current_timer_id)
+        current_timer_id = None
+    waiting_for_next = False
+    is_paused = False
+    quiz_setup_step = 0
+    root.unbind("<Key>")
+    reset_screen_colours()
+    quizPlayerLabel.place_forget()
+    quizQuestionLabel.place_forget()
+    quizTimerLabel.place_forget()
+    quizStatusLabel.place_forget()
+    quizPauseButton.place_forget()
+    quizQuitButton.place_forget()
+    titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
+    crt_canvas.itemconfigure(moving_scanline, state="normal")
+    pygame.mixer.music.set_volume(0.3)
+    show_terminal_from_quiz()
+    print_term("Quiz force quit by user.")
+
+quizPauseButton = tk.Button(root,
+    text="PAUSE",
+    font=descFont,
+    bg=background_colour,
+    fg=foreground_colour,
+    relief="solid",
+    command=toggle_pause
+)
+quizQuitButton = tk.Button(root,
+    text="QUIT QUIZ",
+    font=descFont,
+    bg=background_colour,
+    fg="#FF0000",
+    relief="solid",
+    command=force_quit_quiz
+)
+
 
 def handle_quiz_setup_input(raw_cmd):
     global quiz_setup_step, quiz_settings
@@ -383,11 +443,13 @@ def handle_quiz_setup_input(raw_cmd):
 def begin_quiz_execution():
     global quiz_active_players, quiz_active_questions, current_player_idx, current_question_idx
 
+    pygame.mixer.music.set_volume(0.1)
+
     quiz_active_players = [{
         "name": p,
         "skips": quiz_settings["default_skips"],
         "eliminated": False,
-        "last_chance": quiz_settings["default_last_chance"]
+        "last_chance": False
     } for p in players]
 
     if quiz_settings["rand_players"]:
@@ -407,16 +469,23 @@ def hide_terminal_for_quiz():
     termText.place_forget()
     promptLabel.place_forget()
     termEntry.place_forget()
+    crt_canvas.itemconfigure("scanlines", state="hidden")
+    crt_canvas.itemconfigure(moving_scanline, state="hidden")
+    root.focus_set()
 
 def show_terminal_from_quiz():
     termText.place(x=15, y=80, width=(rootWidth - 30), height=(rootHeight - 200))
     promptLabel.place(x=15, y=(rootHeight - 55))
     termEntry.place(x=35, y=(rootHeight - 55), width=(rootWidth - 50), height=30)
+    crt_canvas.itemconfigure("scanlines", state="normal")
+    crt_canvas.itemconfigure(moving_scanline, state="normal")
     termEntry.focus()
 
 def show_next_quiz_turn():
-    global current_player_idx, current_question_idx, time_remaining, current_timer_id, waiting_for_next
+    global current_player_idx, current_question_idx, time_remaining, current_timer_id, waiting_for_next, is_paused
     waiting_for_next = False
+    is_paused = False
+    quizPauseButton.config(text="PAUSE")
 
     active_remaining = [p for p in quiz_active_players if not p["eliminated"]]
     if len(active_remaining) == 1:
@@ -435,30 +504,58 @@ def show_next_quiz_turn():
         current_player_idx = (current_player_idx + 1) % len(quiz_active_players)
 
     player = quiz_active_players[current_player_idx]
-    question = quiz_active_questions[current_question_idx]
 
     titleLabel.place_forget()
+    quizQuestionLabel.place_forget()
+    quizTimerLabel.place_forget()
+    quizPauseButton.place_forget()
+    quizQuitButton.place_forget()
 
-    quizPlayerLabel.config(text=player["name"], fg=foreground_colour)
+    quizPlayerLabel.config(text=player["name"], fg=foreground_colour, font=playerFont)
     quizPlayerLabel.place(x=(rootWidth // 2), y=30, anchor="n")
 
-    quizQuestionLabel.config(text=question, fg=foreground_colour)
-    quizQuestionLabel.place(x=(rootWidth // 2), y=100, anchor="n")
+    status_text = f"UP NEXT\nSkips Left: {player["skips"]} | Last Chance: {"FINAL CHANCE" if player["last_chance"] else "NO"}"
+    quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
+    quizStatusLabel.place(x=(rootWidth // 2), y=150, anchor="n")
 
-    status_text = f"Skips Left: {player['skips']} | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
-    quizStatusLabel.config(text=status_text, fg=foreground_colour)
-    quizStatusLabel.place(x=(rootWidth // 2), y=250, anchor="n")
+    if current_timer_id:
+        root.after_cancel(current_timer_id)
+        current_timer_id = None
+
+    root.unbind("<Key>")
+    root.after(3000, start_actual_question)
+
+def start_actual_question():
+    global current_timer_id, time_remaining
+    player = quiz_active_players[current_player_idx]
+    question = quiz_active_questions[current_question_idx]
+
+    quizPlayerLabel.config(text=player["name"], fg=foreground_colour, font=playerFont)
+    quizPlayerLabel.place(x=(rootWidth // 2), y=20, anchor="n")
+    quizQuestionLabel.config(text=question, fg=foreground_colour, font=questionFont)
+    quizQuestionLabel.place(x=(rootWidth // 2), y=110, anchor="n")
+
+    status_text = f"Skips Left: {player["skips"]} | Last Chance: {"FINAL CHANCE" if player["last_chance"] else "NO"}"
+    quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
+    quizStatusLabel.place(x=(rootWidth // 2), y=240, anchor="n")
+
+    if current_timer_id:
+        root.after_cancel(current_timer_id)
+        current_timer_id = None
 
     time_remaining = quiz_settings["time_limit"]
-    quizTimerLabel.config(text=f"Time: {time_remaining}s", fg=foreground_colour)
-    quizTimerLabel.place(x=(rootWidth // 2), y=300, anchor="n")
+    quizTimerLabel.config(text=f"Time: {time_remaining}s", fg=foreground_colour, font=timerFont)
+    quizTimerLabel.place(x=(rootWidth // 2), y=320, anchor="n")
+
+    quizPauseButton.place(x=(rootWidth // 2) - 110, y=420, width=100, height=40)
+    quizQuitButton.place(x=(rootWidth // 2) + 10, y=420, width=100, height=40)
 
     root.bind("<Key>", handle_quiz_keypress)
     current_timer_id = root.after(1000, update_quiz_timer)
 
 def update_quiz_timer():
-    global time_remaining, current_timer_id, waiting_for_next
-    if waiting_for_next:
+    global time_remaining, current_timer_id, waiting_for_next, is_paused
+    if waiting_for_next or is_paused:
         return
     if time_remaining > 0:
         time_remaining -= 1
@@ -470,29 +567,41 @@ def update_quiz_timer():
 def handle_timeout():
     player = quiz_active_players[current_player_idx]
     flash_screen("#FFA500", "TIME OUT")
-    if player["last_chance"]:
-        player["eliminated"] = True
-    else:
+    if quiz_settings["default_last_chance"] and not player["last_chance"]:
         player["last_chance"] = True
+    else:
+        player["eliminated"] = True
     prepare_for_next_turn()
 
 def flash_screen(colour, message):
-    global waiting_for_next
+    global waiting_for_next, current_timer_id
     waiting_for_next = True
     if current_timer_id:
         root.after_cancel(current_timer_id)
+        current_timer_id = None
 
     root.configure(bg=colour)
+    crt_canvas.configure(bg=colour)
     quizPlayerLabel.config(bg=colour, fg="#000000")
-    quizQuestionLabel.config(bg=colour, fg="#000000")
+    quizQuestionLabel.config(bg=colour, fg="#000000", font=winnerFont)
     quizTimerLabel.config(bg=colour, fg="#000000")
     quizStatusLabel.config(bg=colour, fg="#000000")
+    quizPauseButton.place_forget()
+    quizQuitButton.place_forget()
 
     quizQuestionLabel.config(text=message)
 
 def prepare_for_next_turn():
     global waiting_for_next
     waiting_for_next = True
+
+def reset_screen_colours():
+    root.configure(bg=background_colour)
+    crt_canvas.configure(bg=background_colour)
+    quizPlayerLabel.config(bg=background_colour, fg=foreground_colour, font=playerFont)
+    quizQuestionLabel.config(bg=background_colour, fg=foreground_colour, font=questionFont)
+    quizTimerLabel.config(bg=background_colour, fg=foreground_colour, font=timerFont)
+    quizStatusLabel.config(bg=background_colour, fg=foreground_colour, font=statusFont)
 
 def handle_quiz_keypress(event):
     global current_player_idx, current_question_idx, time_remaining, current_timer_id, waiting_for_next
@@ -506,55 +615,61 @@ def handle_quiz_keypress(event):
             quizQuestionLabel.place_forget()
             quizTimerLabel.place_forget()
             quizStatusLabel.place_forget()
+            quizPauseButton.place_forget()
             titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
 
             current_question_idx += 1
             current_player_idx = (current_player_idx + 1) % len(quiz_active_players)
             show_next_quiz_turn()
-        return
+        return "break"
 
     if current_timer_id:
         root.after_cancel(current_timer_id)
+        current_timer_id = None
 
     if key == 'y':
         flash_screen("#00FF00", "CORRECT")
         prepare_for_next_turn()
     elif key == 'i':
-        flash_screen("#8B0000", "INCORRECT")
-        player["eliminated"] = True
-        prepare_for_next_turn()
+        if quiz_settings["default_last_chance"] and not player["last_chance"]:
+            player["last_chance"] = True
+            flash_screen("#8B0000", "INCORRECT & LAST CHANCE")
+        else:
+            player["eliminated"] = True
+            flash_screen("#8B0000", "INCORRECT & ELIMINATED")
     elif key == 'p':
-        flash_screen("#FFFFFF", "SKIPPED")
-        prepare_for_next_turn()
+        if player['skips'] > 0:
+            player["skips"] -= 1
+            flash_screen("#FFFFFF", "SKIPPED")
+            prepare_for_next_turn()
     elif key == 'q':
-        player["skips"] = 0
-        player["last_chance"] = True
-        time_remaining += 5
-        flash_screen("#8B0000", "LAST CHANCE")
-        waiting_for_next = False
-        quizTimerLabel.config(text=f"Time: {time_remaining}s")
-        current_timer_id = root.after(1000, update_quiz_timer)
+        if not player["last_chance"]:
+            player["skips"] = 0
+            player["last_chance"] = True
+            time_remaining += 5
+            flash_screen("#8B0000", "LAST CHANCE")
+            waiting_for_next = False
+            quizTimerLabel.config(text=f"Time: {time_remaining}")
+            current_timer_id = root.after(1000, update_quiz_timer)
 
-def reset_screen_colours():
-    root.configure(bg=background_colour)
-    quizPlayerLabel.config(bg=background_colour)
-    quizQuestionLabel.config(bg=background_colour)
-    quizTimerLabel.config(bg=background_colour)
-    quizStatusLabel.config(bg=background_colour)
+    return "break"
 
 def show_winner_screen(winner_name):
-    global waiting_for_next, winner_flashing, winner_timer_id
+    global waiting_for_next, winner_flashing, winner_timer_id, current_timer_id
     waiting_for_next = True
     if current_timer_id:
         root.after_cancel(current_timer_id)
+        current_timer_id = None
 
     titleLabel.place_forget()
     quizPlayerLabel.place_forget()
     quizTimerLabel.place_forget()
     quizStatusLabel.place_forget()
+    quizPauseButton.place_forget()
+    quizQuitButton.place_forget()
 
-    quizQuestionLabel.config(text=f"WINNER:\n{winner_name}", fg="#FFD700", font=titleFont)
-    quizQuestionLabel.place(x=(rootWidth // 2), y=(rootHeight // 2) - 50, anchor="center")
+    quizQuestionLabel.config(text=f"WINNER:\n{winner_name}", fg="#FFD700", font=winnerFont)
+    quizQuestionLabel.place(x=(rootWidth // 2), y=(rootHeight // 2) - 80, anchor="center")
 
     winner_flashing = True
     flash_winner_colors()
@@ -568,6 +683,7 @@ def flash_winner_colors():
     comp_color = "#001133"
     next_bg = comp_color if current_bg == background_colour else background_colour
     root.configure(bg=next_bg)
+    crt_canvas.configure(bg=next_bg)
     quizQuestionLabel.config(bg=next_bg)
     winner_timer_id = root.after(500, flash_winner_colors)
 
@@ -575,22 +691,37 @@ def handle_winner_keypress(event):
     global winner_flashing, winner_timer_id
     if winner_timer_id:
         root.after_cancel(winner_timer_id)
+        winner_timer_id = None
     winner_flashing = False
     root.unbind("<Key>")
     root.configure(bg=background_colour)
+    crt_canvas.configure(bg=background_colour)
     quizQuestionLabel.config(bg=background_colour, fg=foreground_colour, font=descFont)
     quizQuestionLabel.place_forget()
     titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
+    pygame.mixer.music.set_volume(0.3)
+    crt_canvas.itemconfigure("scanlines", state="normal")
+    crt_canvas.itemconfigure(moving_scanline, state="normal")
     show_terminal_from_quiz()
-    print_term("Quiz finished! Winner crowned.")
+    print_term("Quiz finished and winner crowned.")
+    return "break"
 
 def end_quiz(msg):
+    global current_timer_id
+    if current_timer_id:
+        root.after_cancel(current_timer_id)
+        current_timer_id = None
     root.unbind("<Key>")
     quizPlayerLabel.place_forget()
     quizQuestionLabel.place_forget()
     quizTimerLabel.place_forget()
     quizStatusLabel.place_forget()
+    quizPauseButton.place_forget()
+    quizQuitButton.place_forget()
     titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
+    pygame.mixer.music.set_volume(0.3)
+    crt_canvas.itemconfigure("scanlines", state="normal")
+    crt_canvas.itemconfigure(moving_scanline, state="normal")
     show_terminal_from_quiz()
     print_term(msg)
 
@@ -640,7 +771,6 @@ def execute_command(e=None):
         else:
             print_term(f"Unknown command: '{cmd}'. Type 'help' for a list of commands! \n")
             break
-
 
 
 # Music Logic
