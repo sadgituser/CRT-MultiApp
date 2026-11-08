@@ -539,7 +539,7 @@ def show_next_quiz_turn():
     quizPlayerLabel.config(text=player["name"], fg=foreground_colour, font=playerFont)
     quizPlayerLabel.place(x=(rootWidth // 2), y=30, anchor="n")
 
-    status_text = f"UP NEXT\n\n\nSkips Left: {player["skips"]} | Last Chance: {"FINAL CHANCE" if player["last_chance"] else "NO"}"
+    status_text = f"Skips Left: {player['skips']} | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
     quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
     quizStatusLabel.place(x=(rootWidth // 2), y=150, anchor="n")
 
@@ -793,8 +793,8 @@ def execute_command(e=None):
         "quiz question lookup": lambda: (show_questionlist()),
         "quiz player default": lambda: load_default_players(),
         "quiz question default": lambda: load_default_players(),
-        "suggest": lambda: (print_term("Opening GitHub issue template for feature suggestion..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/new?labels=enhancement")),
-        "bug": lambda: (print_term("Opening GitHub issue template for bug report..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/new?labels=bug")),
+        "suggest": lambda: (print_term("Opening GitHub issue template for feature suggestion..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/")),
+        "bug": lambda: (print_term("Opening GitHub issue template for bug report..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/")),
         "syntax": lambda: (show_syntax()),
         "rickroll": lambda: (print_term("RICKROLL!"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble... \n"), testLuck()),
