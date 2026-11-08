@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Windows-x64" --icon="Assets/app_icon.ico" --add-data "Assets;Assets" main.py
+          pyinstaller --noconfirm --onefile --name "Quiz-Windows-x64" --icon="Assets/app-icon.ico" --add-data "Assets;Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-macOS-ARM64" --icon="Assets/app-icon.icns" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --name "Quiz-macOS-ARM64" --icon="Assets/app-icon.icns" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -85,7 +85,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-Ubuntu" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --name "Quiz-Linux-Ubuntu" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -100,7 +100,7 @@ jobs:
       image: archlinux:latest
 
     steps:
-      - name: Install git and System Packages
+      - name: Install system packages
         run: |
           pacman -Sy --noconfirm git gcc python python-pip tk sdl2 sdl2_mixer sdl2_image sdl2_ttf
 
@@ -113,7 +113,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-Arch" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --name "Quiz-Linux-Arch" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -125,10 +125,10 @@ jobs:
     name: Build Linux RedHat / Fedora Executable
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: fedora:40
 
     steps:
-      - name: Install System Dependencies
+      - name: Install system packages
         run: |
           dnf install -y git gcc python3 python3-devel python3-tkinter python3-pip SDL2-devel SDL2_mixer-devel SDL2_image-devel SDL2_ttf-devel
 
@@ -141,7 +141,7 @@ jobs:
 
       - name: Build Single-File Executable with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "Quiz-Linux-RedHat" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
+          pyinstaller --noconfirm --onefile --name "Quiz-Linux-RedHat" --icon="Assets/app-icon.ico" --add-data "Assets:Assets" main.py
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

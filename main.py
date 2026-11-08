@@ -3,7 +3,6 @@ from tkinter import *
 import sys
 import os
 from tkinter import font, messagebox, filedialog
-from PIL import Image, ImageTk
 import webbrowser
 import random
 import time
@@ -23,7 +22,7 @@ def resource_path(relative_path):
 background_colour, foreground_colour = "#000000", "#00FF00"
 active_background_colour, active_foreground_colour = "#00CC00", "#000000"
 rootWidth, rootHeight = 800, 700
-app_icon = resource_path("app_icon.ico") # Change this to something that makes more sense later
+app_icon = resource_path("app-icon.ico")
 mainFontFamily = "Consolas"
 bg_music_path = resource_path("bg_music.mp3")
 players = []
