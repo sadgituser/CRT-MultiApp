@@ -6,6 +6,7 @@ from tkinter import font, messagebox, filedialog
 from PIL import Image, ImageTk
 import webbrowser
 import random
+import time
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 
@@ -45,6 +46,7 @@ current_timer_id = None
 time_remaining = 0
 waiting_for_next = False
 is_paused = False
+is_last_chance_action = False
 
 
 # Music (initialise)
@@ -99,11 +101,11 @@ def apply_crt_flicker():
 titleFont = font.Font(family=mainFontFamily, size=28, underline=True, weight="bold")
 descFont = font.Font(family=mainFontFamily, size=14)
 buttonFont = font.Font(family=mainFontFamily, size=17, underline=True)
-playerFont = font.Font(family=mainFontFamily, size=36, weight="bold", underline=True)
-questionFont = font.Font(family=mainFontFamily, size=18, weight="bold")
-timerFont = font.Font(family=mainFontFamily, size=16, weight="bold")
-statusFont = font.Font(family=mainFontFamily, size=14)
-winnerFont = font.Font(family=mainFontFamily, size=42, underline=True, weight="bold")
+playerFont = font.Font(family=mainFontFamily, size=48, weight="bold", underline=True)
+questionFont = font.Font(family=mainFontFamily, size=24, weight="bold")
+timerFont = font.Font(family=mainFontFamily, size=18, weight="bold")
+statusFont = font.Font(family=mainFontFamily, size=17)
+winnerFont = font.Font(family=mainFontFamily, size=48, underline=True, weight="bold")
 
 
 # Widgets
@@ -117,6 +119,19 @@ titleLabel = tk.Label(root,
 )
 titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
 
+# Clock
+clockLabel = tk.Label(root,
+    font=descFont,
+    bg=background_colour,
+    fg=foreground_colour
+)
+clockLabel.place(x=(rootWidth - 15), y=20, anchor="ne")
+
+def update_clock():
+    current_time = time.strftime("%H:%M:%S")
+    clockLabel.config(text=current_time)
+    root.after(500, update_clock)
+update_clock()
 
 
 # Gamble
@@ -323,7 +338,7 @@ def preface_quiz():
     global quiz_ready
     msg = "Checking quiz requirements... \n"
     if questions and players:
-        msg += "Questions and players loaded... \nQuiz ready"
+        msg += "Questions and players loaded... \nQuiz ready\n"
         quiz_ready = True
     elif questions and not players:
         msg += "Questions loaded \nPlayers still to be loaded, load questions with 'quiz question load'"
@@ -409,6 +424,16 @@ quizQuitButton = tk.Button(root,
     command=force_quit_quiz
 )
 
+
+def load_default_players():
+    global players
+    players = ["Player 1", "Player 2", "Player 3", "Player 4"]
+    print_term(f"Loaded {len(players)} default players! \n")
+
+def load_default_questions():
+    global questions
+    questions = ["What is 2 + 2?", "What is the capital of France?", "What colour is the sky?", "What is 5 * 5?"]
+    print_term(f"Loaded {len(questions)} default questions!")
 
 def handle_quiz_setup_input(raw_cmd):
     global quiz_setup_step, quiz_settings
@@ -514,7 +539,7 @@ def show_next_quiz_turn():
     quizPlayerLabel.config(text=player["name"], fg=foreground_colour, font=playerFont)
     quizPlayerLabel.place(x=(rootWidth // 2), y=30, anchor="n")
 
-    status_text = f"UP NEXT\nSkips Left: {player["skips"]} | Last Chance: {"FINAL CHANCE" if player["last_chance"] else "NO"}"
+    status_text = f"UP NEXT\n\n\nSkips Left: {player["skips"]} | Last Chance: {"FINAL CHANCE" if player["last_chance"] else "NO"}"
     quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
     quizStatusLabel.place(x=(rootWidth // 2), y=150, anchor="n")
 
@@ -531,13 +556,13 @@ def start_actual_question():
     question = quiz_active_questions[current_question_idx]
 
     quizPlayerLabel.config(text=player["name"], fg=foreground_colour, font=playerFont)
-    quizPlayerLabel.place(x=(rootWidth // 2), y=20, anchor="n")
+    quizPlayerLabel.place(x=(rootWidth // 2), y=15, anchor="n")
     quizQuestionLabel.config(text=question, fg=foreground_colour, font=questionFont)
-    quizQuestionLabel.place(x=(rootWidth // 2), y=110, anchor="n")
+    quizQuestionLabel.place(x=(rootWidth // 2), y=120, anchor="n")
 
     status_text = f"Skips Left: {player["skips"]} | Last Chance: {"FINAL CHANCE" if player["last_chance"] else "NO"}"
     quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
-    quizStatusLabel.place(x=(rootWidth // 2), y=240, anchor="n")
+    quizStatusLabel.place(x=(rootWidth // 2), y=280, anchor="n")
 
     if current_timer_id:
         root.after_cancel(current_timer_id)
@@ -545,10 +570,10 @@ def start_actual_question():
 
     time_remaining = quiz_settings["time_limit"]
     quizTimerLabel.config(text=f"Time: {time_remaining}s", fg=foreground_colour, font=timerFont)
-    quizTimerLabel.place(x=(rootWidth // 2), y=320, anchor="n")
+    quizTimerLabel.place(x=(rootWidth // 2), y=360, anchor="n")
 
-    quizPauseButton.place(x=(rootWidth // 2) - 110, y=420, width=100, height=40)
-    quizQuitButton.place(x=(rootWidth // 2) + 10, y=420, width=100, height=40)
+    quizPauseButton.place(x=(rootWidth // 2) - 110, y=450, width=100, height=40)
+    quizQuitButton.place(x=(rootWidth // 2) + 10, y=450, width=100, height=40)
 
     root.bind("<Key>", handle_quiz_keypress)
     current_timer_id = root.after(1000, update_quiz_timer)
@@ -604,24 +629,35 @@ def reset_screen_colours():
     quizStatusLabel.config(bg=background_colour, fg=foreground_colour, font=statusFont)
 
 def handle_quiz_keypress(event):
-    global current_player_idx, current_question_idx, time_remaining, current_timer_id, waiting_for_next
+    global current_player_idx, current_question_idx, time_remaining, current_timer_id, waiting_for_next, is_last_chance_action
     player = quiz_active_players[current_player_idx]
     key = event.char.lower()
 
     if waiting_for_next:
         if key == 'n':
             reset_screen_colours()
-            quizPlayerLabel.place_forget()
-            quizQuestionLabel.place_forget()
-            quizTimerLabel.place_forget()
-            quizStatusLabel.place_forget()
-            quizPauseButton.place_forget()
-            titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
+            if is_last_chance_action:
+                is_last_chance_action = False
+                waiting_for_next = False
+                quizPlayerLabel.place_forget()
+                quizQuestionLabel.place_forget()
+                quizTimerLabel.place_forget()
+                quizStatusLabel.place_forget()
+                quizPauseButton.place_forget()
+                quizQuitButton.place_forget()
+                start_actual_question()
+            else:
+                quizPlayerLabel.place_forget()
+                quizQuestionLabel.place_forget()
+                quizTimerLabel.place_forget()
+                quizStatusLabel.place_forget()
+                quizPauseButton.place_forget()
+                quizQuitButton.place_forget()
+                titleLabel.place(x=(rootWidth // 2), y=20, anchor="n")
 
-            current_question_idx += 1
-            current_player_idx = (current_player_idx + 1) % len(quiz_active_players)
-            show_next_quiz_turn()
-        return "break"
+                current_question_idx += 1
+                current_player_idx = (current_player_idx + 1) % len(quiz_active_players)
+                show_next_quiz_turn()
 
     if current_timer_id:
         root.after_cancel(current_timer_id)
@@ -647,10 +683,9 @@ def handle_quiz_keypress(event):
             player["skips"] = 0
             player["last_chance"] = True
             time_remaining += 5
-            flash_screen("#8B0000", "LAST CHANCE")
-            waiting_for_next = False
+            is_last_chance_action = True
             quizTimerLabel.config(text=f"Time: {time_remaining}")
-            current_timer_id = root.after(1000, update_quiz_timer)
+            flash_screen("#8B0000", "LAST CHANCE")
 
     return "break"
 
@@ -744,18 +779,22 @@ def execute_command(e=None):
     sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
 
     commands = {
-        "help": lambda: print_term("Commands: quiz, syntax, rickroll, luck, clear, cls, about, exit \n"),
+        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, cls, about, exit \n"),
         "quiz": lambda: (print_term("Available commands: player, question, start, preface, keys, about \nCommands for this must start with 'quiz '\n"), termEntry.insert(tk.END, "quiz ")),
         "quiz preface": lambda: preface_quiz(),
         "quiz keys": lambda: print_term("Quiz Key Bindings during gameplay:\n- 'y': Correct answer (stays in, press 'n' for next)\n- 'i': Incorrect answer (eliminated, press 'n' for next)\n- 'p': Skip question (stays in, press 'n' for next)\n- 'q': Trigger last chance manually (sets skips to 0, adds 5s to timer)\n- 'n': Proceed to next turn after a screen flash\n"),
         "quiz about": lambda: print_term("Quiz Usage & Purpose:\nDesigned to be operated by a host standing in front of a class or participating audience. The host listens out for player responses in the room and inputs the corresponding key commands into the CRT interface.\n"),
         "quiz start": lambda: start_quiz_setup(),
-        "quiz player": lambda: (print_term("Available commands: load, lookup \nCommands for this must start with 'quiz player '\n"), termEntry.insert(tk.END, "quiz player ")),
-        "quiz question": lambda: (print_term("Available commands: load, lookup \nCommands for this must start with 'quiz question '\n"), termEntry.insert(tk.END, "quiz question ")),
+        "quiz player": lambda: (print_term("Available commands: load, lookup, default \nCommands for this must start with 'quiz player '\n"), termEntry.insert(tk.END, "quiz player ")),
+        "quiz question": lambda: (print_term("Available commands: load, lookup, default \nCommands for this must start with 'quiz question '\n"), termEntry.insert(tk.END, "quiz question ")),
         "quiz player load": lambda: (print_term("Loading playerlist.txt"), load_playerlist()),
         "quiz question load": lambda: (print_term("Loading questionlist.txt"), load_questionlist()),
         "quiz player lookup": lambda: (show_playerlist()),
         "quiz question lookup": lambda: (show_questionlist()),
+        "quiz player default": lambda: load_default_players(),
+        "quiz question default": lambda: load_default_players(),
+        "suggest": lambda: (print_term("Opening GitHub issue template for feature suggestion..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/new?labels=enhancement")),
+        "bug": lambda: (print_term("Opening GitHub issue template for bug report..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/new?labels=bug")),
         "syntax": lambda: (show_syntax()),
         "rickroll": lambda: (print_term("RICKROLL!"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble... \n"), testLuck()),
@@ -801,15 +840,10 @@ termEntry.bind("<Return>", execute_command)
 root.mainloop()
 
 # Things/Ideas to add:
-    # A command ask menu detailing how a command works
     # An optional AI to have it generate questions for you
-    # Default player (Player 1, Player 2 etc.) and Questions files
     # More fun menus and commands
-    # The time in the corner
     # A new iconbitmap (and accompanying .png made in Aseprite - Terminal)
     # Put the app logo in more places
-    # Suggest a feature command (takes to GitHub issue template)
-    # Report a bug command (takes to GitHub issue template)
     # Disable/Enable scanline option
     # Disable/Enable text_chars delay option
     # More ideas to come later!
