@@ -46,6 +46,7 @@ time_remaining = 0
 waiting_for_next = False
 is_paused = False
 is_last_chance_action = False
+intro_timer_id = None
 
 
 # Music (initialise)
@@ -56,7 +57,7 @@ pygame.mixer.init()
 root=tk.Tk()
 root.title("Quiz")
 root.geometry(f"{rootWidth}x{rootHeight}+100+100")
-root.resizable(True, True)
+root.resizable(False, False)
 root.configure(bg=background_colour)
 try:
     root.iconbitmap(app_icon)
@@ -173,7 +174,8 @@ def testLuck():
             luckPopup.destroy()
             root.destroy()
         else:
-            messagebox.showinfo("You Win", "Your gamble paid off!")
+            messagebox.showinfo("You Win", "Your gamble paid off! You get...")
+            messagebox.showinfo("Nothing", "NOTHING! :o")
             luckPopup.destroy()
 
     luckPopup.after(((currentRanNum * 100) + 100), finish_luck)
@@ -193,7 +195,7 @@ termText = tk.Text(root,
     font=descFont, 
     relief="flat"
 )
-termText.place(x=15, y=80, width=(rootWidth - 30), height=(rootHeight - 200))
+termText.place(x=15, y=80, width=(rootWidth - 30), height=(rootHeight - 150))
 termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> ")
 termText.config(state="disabled")
 
@@ -319,7 +321,7 @@ def show_playerlist():
     if not players:
         print_term("No players loaded! Use 'quiz player load' first! \n")
     else:
-        player_output = "Player List:\n"
+        player_output = "Player List:\n\n"
         for player in players:
             player_output += f"- {player}\n"
         print_term(player_output.strip())
@@ -328,7 +330,7 @@ def show_questionlist():
     if not questions:
         print_term("No questions loaded! Use 'quiz question load' first! \n")
     else:
-        question_output = "Question List:\n"
+        question_output = "Question List:\n\n"
         for q in questions:
             question_output += f"- {q}\n"
         print_term(question_output.strip())
@@ -361,13 +363,14 @@ quiz_setup_step = 0
 def start_quiz_setup():
     global quiz_ready, quiz_setup_step
     if quiz_ready == False:
-        print_term("Run 'quiz preface' first")
+        print_term("Run 'quiz preface' first\n")
         return
     quiz_setup_step = 1
     print_term("-- QUIZ SETTINGS INITIALISATION --\nRandomise question order? (y/n):")
 
 winner_flashing = False
 winner_timer_id = None
+winner_can_exit = False
 
 def toggle_pause():
     global is_paused, current_timer_id
@@ -385,10 +388,13 @@ def toggle_pause():
         current_timer_id = root.after(1000, update_quiz_timer)
 
 def force_quit_quiz():
-    global current_timer_id, quiz_setup_step, waiting_for_next, is_paused
+    global current_timer_id, quiz_setup_step, waiting_for_next, is_paused, intro_timer_id
     if current_timer_id:
         root.after_cancel(current_timer_id)
         current_timer_id = None
+    if intro_timer_id:
+        root.after_cancel(intro_timer_id)
+        intro_timer_id = None
     waiting_for_next = False
     is_paused = False
     quiz_setup_step = 0
@@ -404,7 +410,7 @@ def force_quit_quiz():
     crt_canvas.itemconfigure(moving_scanline, state="normal")
     pygame.mixer.music.set_volume(0.3)
     show_terminal_from_quiz()
-    print_term("Quiz force quit by user.")
+    print_term("Quiz force quit by user.\n")
 
 quizPauseButton = tk.Button(root,
     text="PAUSE",
@@ -432,7 +438,7 @@ def load_default_players():
 def load_default_questions():
     global questions
     questions = ["What is 2 + 2?", "What is the capital of France?", "What colour is the sky?", "What is 5 * 5?"]
-    print_term(f"Loaded {len(questions)} default questions!")
+    print_term(f"Loaded {len(questions)} default questions! \n")
 
 def handle_quiz_setup_input(raw_cmd):
     global quiz_setup_step, quiz_settings
@@ -443,7 +449,7 @@ def handle_quiz_setup_input(raw_cmd):
     elif quiz_setup_step == 2:
         quiz_settings['rand_players'] = (raw_cmd == 'y')
         quiz_setup_step = 3
-        print_term("Enter time limit per question (seconds):")
+        print_term("Enter time limit per question (seconds - applies to all questions):")
     elif quiz_setup_step == 3:
         try:
             quiz_settings['time_limit'] = int(raw_cmd)
@@ -461,7 +467,7 @@ def handle_quiz_setup_input(raw_cmd):
     elif quiz_setup_step == 5:
         quiz_settings['default_last_chance'] = (raw_cmd == 'y')
         quiz_setup_step = 0
-        print_term("Settings applied. Starting quiz...")
+        print_term("Settings applied. Starting quiz...\n")
         begin_quiz_execution()
 
 def begin_quiz_execution():
@@ -506,9 +512,18 @@ def show_terminal_from_quiz():
     termEntry.focus()
 
 def show_next_quiz_turn():
-    global current_player_idx, current_question_idx, time_remaining, current_timer_id, waiting_for_next, is_paused
+    global current_player_idx, current_question_idx, time_remaining, current_timer_id, waiting_for_next, is_paused, intro_timer_id
     waiting_for_next = False
     is_paused = False
+
+    if intro_timer_id:
+        root.after_cancel(intro_timer_id)
+        intro_timer_id = None
+    if current_timer_id:
+        root.after_cancel(current_timer_id)
+        current_timer_id = None
+
+
     quizPauseButton.config(text="PAUSE")
 
     active_remaining = [p for p in quiz_active_players if not p['eliminated']]
@@ -538,13 +553,12 @@ def show_next_quiz_turn():
     quizPlayerLabel.config(text=player['name'], fg=foreground_colour, font=playerFont)
     quizPlayerLabel.place(x=(rootWidth // 2), y=30, anchor="n")
 
-    status_text = f"Skips Left: {player['skips']} | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
+    status_text = f"Skips Left: {player['skips']}"
+    if quiz_settings['default_last_chance']:
+        status_text += f" | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
     quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
     quizStatusLabel.place(x=(rootWidth // 2), y=150, anchor="n")
 
-    if current_timer_id:
-        root.after_cancel(current_timer_id)
-        current_timer_id = None
 
     root.unbind("<Key>")
     root.after(3000, start_actual_question)
@@ -559,9 +573,11 @@ def start_actual_question():
     quizQuestionLabel.config(text=question, fg=foreground_colour, font=questionFont)
     quizQuestionLabel.place(x=(rootWidth // 2), y=120, anchor="n")
 
-    status_text = f"Skips Left: {player['skips']} | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
+    status_text = f"Skips Left: {player['skips']}"
+    if quiz_settings['default_last_chance']:
+        status_text += f" | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
     quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
-    quizStatusLabel.place(x=(rootWidth // 2), y=280, anchor="n")
+    quizStatusLabel.place(x=(rootWidth // 2), y=330, anchor="n")
 
     if current_timer_id:
         root.after_cancel(current_timer_id)
@@ -569,10 +585,10 @@ def start_actual_question():
 
     time_remaining = quiz_settings['time_limit']
     quizTimerLabel.config(text=f"Time: {time_remaining}s", fg=foreground_colour, font=timerFont)
-    quizTimerLabel.place(x=(rootWidth // 2), y=360, anchor="n")
+    quizTimerLabel.place(x=(rootWidth // 2), y=410, anchor="n")
 
-    quizPauseButton.place(x=(rootWidth // 2) - 110, y=450, width=100, height=40)
-    quizQuitButton.place(x=(rootWidth // 2) + 10, y=450, width=100, height=40)
+    quizPauseButton.place(x=(rootWidth // 2) - 110, y=500, width=100, height=40)
+    quizQuitButton.place(x=(rootWidth // 2) + 10, y=500, width=100, height=40)
 
     root.bind("<Key>", handle_quiz_keypress)
     current_timer_id = root.after(1000, update_quiz_timer)
@@ -638,13 +654,27 @@ def handle_quiz_keypress(event):
             if is_last_chance_action:
                 is_last_chance_action = False
                 waiting_for_next = False
-                quizPlayerLabel.place_forget()
-                quizQuestionLabel.place_forget()
-                quizTimerLabel.place_forget()
-                quizStatusLabel.place_forget()
-                quizPauseButton.place_forget()
-                quizQuitButton.place_forget()
-                start_actual_question()
+                quizPlayerLabel.config(text=player['name'], fg=foreground_colour, font=playerFont)
+                quizPlayerLabel.place(x=(rootWidth // 2), y=15, anchor="n")
+                quizQuestionLabel.config(text=quiz_active_questions[current_question_idx], fg=foreground_colour, font=questionFont)
+                quizQuestionLabel.place(x=(rootWidth // 2), y=120, anchor="n")
+
+                status_text = f"Skips Left: {player['skips']}"
+                if quiz_settings['default_last_chance']:
+                    status_text += f" | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
+                quizStatusLabel.config(text=status_text, fg=foreground_colour, font=statusFont)
+                quizStatusLabel.place(x=(rootWidth // 2), y=330, anchor="n")
+
+                quizTimerLabel.config(text=f"Time Remaining: {time_remaining}s", fg=foreground_colour, font=timerFont)
+                quizTimerLabel.place(x=(rootWidth // 2), y=410, anchor="n")
+
+                quizPauseButton.place(x=(rootWidth // 2) - 100, y=500, width=100, height=40)
+                quizQuitButton.place(x=(rootWidth // 2 + 10), y=500, width=100, height=40)
+
+                root.bind("<Key>", handle_quiz_keypress)
+                if current_timer_id:
+                    root.after_cancel(current_timer_id)
+                current_timer_id = root.after(1000, update_quiz_timer)
             else:
                 quizPlayerLabel.place_forget()
                 quizQuestionLabel.place_forget()
@@ -657,6 +687,8 @@ def handle_quiz_keypress(event):
                 current_question_idx += 1
                 current_player_idx = (current_player_idx + 1) % len(quiz_active_players)
                 show_next_quiz_turn()
+            return "break"
+
 
     if current_timer_id:
         root.after_cancel(current_timer_id)
@@ -672,25 +704,27 @@ def handle_quiz_keypress(event):
         else:
             player['eliminated'] = True
             flash_screen("#8B0000", "INCORRECT & ELIMINATED")
+        prepare_for_next_turn()
     elif key == 'p':
         if player['skips'] > 0:
             player['skips'] -= 1
             flash_screen("#FFFFFF", "SKIPPED")
             prepare_for_next_turn()
     elif key == 'q':
-        if not player['last_chance']:
+        if quiz_settings['default_last_chance'] and not player['last_chance']:
             player['skips'] = 0
             player['last_chance'] = True
             time_remaining += 5
             is_last_chance_action = True
             quizTimerLabel.config(text=f"Time: {time_remaining}")
-            flash_screen("#8B0000", "LAST CHANCE")
+            flash_screen("#8B0000", "LAST CHANCE TRIGGERED")
 
     return "break"
 
 def show_winner_screen(winner_name):
-    global waiting_for_next, winner_flashing, winner_timer_id, current_timer_id
+    global waiting_for_next, winner_flashing, winner_timer_id, current_timer_id, winner_can_exit
     waiting_for_next = True
+    winner_can_exit = False
     if current_timer_id:
         root.after_cancel(current_timer_id)
         current_timer_id = None
@@ -708,6 +742,7 @@ def show_winner_screen(winner_name):
     winner_flashing = True
     flash_winner_colors()
     root.bind("<Key>", handle_winner_keypress)
+    root.after(7000, lambda: globals().update(winner_can_exit=True))
 
 def flash_winner_colors():
     global winner_timer_id, winner_flashing
@@ -719,10 +754,12 @@ def flash_winner_colors():
     root.configure(bg=next_bg)
     crt_canvas.configure(bg=next_bg)
     quizQuestionLabel.config(bg=next_bg)
-    winner_timer_id = root.after(500, flash_winner_colors)
+    winner_timer_id = root.after(250, flash_winner_colors)
 
 def handle_winner_keypress(event):
-    global winner_flashing, winner_timer_id
+    global winner_flashing, winner_timer_id, winner_can_exit
+    if not winner_can_exit or event.char.lower() != 'n':
+        return "break"
     if winner_timer_id:
         root.after_cancel(winner_timer_id)
         winner_timer_id = None
@@ -737,7 +774,7 @@ def handle_winner_keypress(event):
     crt_canvas.itemconfigure("scanlines", state="normal")
     crt_canvas.itemconfigure(moving_scanline, state="normal")
     show_terminal_from_quiz()
-    print_term("Quiz finished and winner crowned.")
+    print_term("Quiz finished and winner crowned. \n")
     return "break"
 
 def end_quiz(msg):
@@ -778,11 +815,11 @@ def execute_command(e=None):
     sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
 
     commands = {
-        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, cls, about, exit \n"),
+        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, cls \n"),
         "quiz": lambda: (print_term("Available commands: player, question, start, preface, keys, about \nCommands for this must start with 'quiz '\n"), termEntry.insert(tk.END, "quiz ")),
         "quiz preface": lambda: preface_quiz(),
         "quiz keys": lambda: print_term("Quiz Key Bindings during gameplay:\n- 'y': Correct answer (stays in, press 'n' for next)\n- 'i': Incorrect answer (eliminated, press 'n' for next)\n- 'p': Skip question (stays in, press 'n' for next)\n- 'q': Trigger last chance manually (sets skips to 0, adds 5s to timer)\n- 'n': Proceed to next turn after a screen flash\n"),
-        "quiz about": lambda: print_term("Quiz Usage & Purpose:\nDesigned to be operated by a host standing in front of a class or participating audience. The host listens out for player responses in the room and inputs the corresponding key commands into the CRT interface.\n"),
+        "quiz about": lambda: print_term("Quiz Usage & Purpose:\nDesigned to be operated by a host standing in front of a class or participating audience. The host listens out for player responses in the room and inputs the corresponding key commands into the CRT interface. \nYou cn type 'quiz keys' to see what the keybinds are for moving questions along! \n"),
         "quiz start": lambda: start_quiz_setup(),
         "quiz player": lambda: (print_term("Available commands: load, lookup, default \nCommands for this must start with 'quiz player '\n"), termEntry.insert(tk.END, "quiz player ")),
         "quiz question": lambda: (print_term("Available commands: load, lookup, default \nCommands for this must start with 'quiz question '\n"), termEntry.insert(tk.END, "quiz question ")),
@@ -791,15 +828,15 @@ def execute_command(e=None):
         "quiz player lookup": lambda: (show_playerlist()),
         "quiz question lookup": lambda: (show_questionlist()),
         "quiz player default": lambda: load_default_players(),
-        "quiz question default": lambda: load_default_players(),
-        "suggest": lambda: (print_term("Opening GitHub issue template for feature suggestion..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/")),
-        "bug": lambda: (print_term("Opening GitHub issue template for bug report..."), webbrowser.open_new("https://github.com/sadgituser/Python-Quiz/issues/")),
+        "quiz question default": lambda: load_default_questions(),
+        "suggest": lambda: (print_term("Opening GitHub issue template for feature suggestion...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
+        "bug": lambda: (print_term("Opening GitHub issue template for bug report...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md")),
         "syntax": lambda: (show_syntax()),
-        "rickroll": lambda: (print_term("RICKROLL!"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
+        "rickroll": lambda: (print_term("RICKROLL!\n"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble... \n"), testLuck()),
-        "clear": lambda: (clear_term(), termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> ")),
-        "cls": lambda: (clear_term(), termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> ")),
-        "about": lambda: (print_term("Terra CRT App! \n"), openMePages()),
+        "clear": lambda: (clear_term(), root.after(100, termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> "))),
+        "cls": lambda: (clear_term(), root.after(100, termText.insert("end", "CRT OS v1.0\nType 'help' for commands. \n\n> "))),
+        "about": lambda: (print_term("Terra (Hackclub) CRT App! Check out the GitHub for more info! \n"), openMePages()),
         "exit": root.destroy
     }
 
