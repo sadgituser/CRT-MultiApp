@@ -6,6 +6,12 @@ But it is now a general fun app that has a CRT style screen and a bunch of cool 
 
 <p align="center">There are also a bunch of other features too! Such as _rickrolls_, a _gamble_ feature and default player and quiz questions, along with other projected ideas that aren't do do with the main **quiz** function. I am planning on adding more features later!</p>
 
+The **projected** OS versions will be:
+ - Windows (x64)
+ - MacOS (15 - Apple Silicon)
+ - Linux (Ubuntu)
+ - If more OSs are requested, then create a [Suggest Issue](https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md) with the code for the build.yml GitHub Actions file!
+
 
 ![App Screenshot](/Assets/app_screenshotpng.png)
 
