@@ -432,12 +432,72 @@ quizQuitButton = tk.Button(root,
 
 def load_default_players():
     global players
-    players = ["Player 1", "Player 2", "Player 3", "Player 4"]
+    players = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8", "Player 9", "Player 10"]
     print_term(f"Loaded {len(players)} default players! \n")
 
 def load_default_questions():
     global questions
-    questions = ["What is 2 + 2?", "What is the capital of France?", "What colour is the sky?", "What is 5 * 5?"]
+    questions = ["What is the largest mammal on Earth?", 
+        "Who wrote 'Romeo and Juliet'?", 
+        "What is the chemical symbol for gold?", 
+        "Which ocean is the largest?", 
+        "What is 12 x 8?", 
+        "Who painted the Mona Lisa?", 
+        "What is the boiling point of water in degrees Celsius?", 
+        "Which country is home to the Great Pyramid of Giza?", 
+        "What is the fastest land animal?", 
+        "Who invented the telephone?", 
+        "What is the square root of 144?", 
+        "Which gas do plants absorb from the atmosphere?", 
+        "What is the smallest prime number?", 
+        "Who was the first person to walk on the Moon?", 
+        "Which continent is the Sahara Desert located on?", 
+        "What is the capital of Japan?", 
+        "How many bones are in the adult human body?", 
+        "Which planet is closest to the Sun?", 
+        "What is the hardest natural substance?", 
+        "Who discovered gravity after observing a falling apple?", 
+        "What is the largest continent?", 
+        "How many days are there in a leap year?", 
+        "What is the currency of the United Kingdom?", 
+        "Which element has the chemical symbol O?", 
+        "What is the tallest mountain in the world?", 
+        "Who wrote 'Harry Potter'?", 
+        "How many colours are there in a rainbow?", 
+        "What is the capital city of Australia?", 
+        "Which bird is often associated with delivering babies in stories?", 
+        "What is the freezing point of water in degrees Celsius?", 
+        "Which organ pumps blood around the human body?", 
+        "What is the longest river in the world?", 
+        "Who painted the ceiling of the Sistine Chapel?", 
+        "Which country invented pizza?", 
+        "What is the largest planet in the Solar System?", 
+        "How many minutes are in one hour?", 
+        "What is the chemical symbol for silver?", 
+        "Who was the first President of the United States?", 
+        "What is the capital of Canada?", 
+        "Which instrument has 88 keys?", 
+        "What is the tallest animal in the world?", 
+        "Which planet has rings that are clearly visible from Earth?", 
+        "What is the primary language spoken in Brazil?", 
+        "What is 15 squared?", 
+        "Who wrote 'The Hobbit'?", 
+        "Which metal is liquid at room temperature?", 
+        "What is the largest species of shark?", 
+        "What is the national sport of Japan?", 
+        "Which country is famous for the Eiffel Tower?", 
+        "What is the value of Pi rounded to two decimal places?", 
+        "How many continents are there on Earth?", 
+        "What is the largest desert in the world?", 
+        "Who developed the theory of relativity?", 
+        "What is the capital of Spain?", 
+        "Which planet is known for its Great Red Spot?", 
+        "What is the name of the galaxy that contains our Solar System?", 
+        "How many players are on a standard football (soccer) team on the field?", 
+        "What is the world's most abundant gas?", 
+        "Who painted 'Starry Night'?", 
+        "What is the capital of Germany?", 
+        "How many strings does a standard guitar have?"]
     print_term(f"Loaded {len(questions)} default questions! \n")
 
 def handle_quiz_setup_input(raw_cmd):
@@ -823,8 +883,8 @@ def execute_command(e=None):
         "quiz start": lambda: start_quiz_setup(),
         "quiz player": lambda: (print_term("Available commands: load, lookup, default \nCommands for this must start with 'quiz player '\n"), termEntry.insert(tk.END, "quiz player ")),
         "quiz question": lambda: (print_term("Available commands: load, lookup, default \nCommands for this must start with 'quiz question '\n"), termEntry.insert(tk.END, "quiz question ")),
-        "quiz player load": lambda: (print_term("Loading playerlist.txt"), load_playerlist()),
-        "quiz question load": lambda: (print_term("Loading questionlist.txt"), load_questionlist()),
+        "quiz player load": lambda: (print_term("Loading playerlist.txt \n"), load_playerlist()),
+        "quiz question load": lambda: (print_term("Loading questionlist.txt \n"), load_questionlist()),
         "quiz player lookup": lambda: (show_playerlist()),
         "quiz question lookup": lambda: (show_questionlist()),
         "quiz player default": lambda: load_default_players(),
@@ -858,19 +918,6 @@ except Exception as e:
 
 
 # Initialise main window
-
-# Window Resizing
-def on_window_resize(event):
-    global rootWidth, rootHeight
-    if event.widget == root and (event.width != rootWidth or event.height != rootHeight):
-        rootWidth = event.width
-        rootHeight = event.height
-        crt_canvas.config(width=rootWidth, height=rootHeight)
-        titleLabel.config(wraplength=(rootWidth - 25))
-        quizQuestionLabel.config(wraplength=(rootWidth - 50))
-
-root.bind("<Configure>", on_window_resize)
-
 apply_crt_flicker()
 termEntry.bind("<Return>", execute_command)
 root.mainloop()
