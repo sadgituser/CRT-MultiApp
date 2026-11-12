@@ -342,10 +342,10 @@ def preface_quiz():
         msg += "Questions and players loaded... \nQuiz ready\n"
         quiz_ready = True
     elif questions and not players:
-        msg += "Questions loaded \nPlayers still to be loaded, load questions with 'quiz question load'\n"
+        msg += "Questions loaded \nPlayers still to be loaded, load players with 'quiz player load'\n"
         quiz_ready = False
     elif players and not questions:
-        msg += "Players loaded \nQuestions still to be loaded, load players with 'quiz player load'\n"
+        msg += "Players loaded \nQuestions still to be loaded, load questions with 'quiz question load'\n"
         quiz_ready = False
     else:
         msg += "Nothing loaded \nPlease load files by typing 'quiz player load' and 'quiz question load'\n"
