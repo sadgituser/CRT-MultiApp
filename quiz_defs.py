@@ -3,6 +3,8 @@ from tkinter import font, messagebox, filedialog
 import webbrowser
 import random
 import time
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import stateVars
 
@@ -29,12 +31,12 @@ def update_clock():
     stateVars.root.after(500, update_clock)
 
 def apply_crt_flicker():
-    glow_colours = ["#00FF00", "#00DD00", "#22FF22", "#00EE00", "#00BB00"]
+    glow_colours = ["#00FF00", "#00DD00", "#22FF22", "#00EE00", "#1BF81B", "#0DD30D"]
     chosen_colour = random.choice(glow_colours)
     stateVars.titleLabel.configure(fg=chosen_colour)
     stateVars.termText.configure(fg=chosen_colour)
     stateVars.termEntry.configure(fg=chosen_colour)
-    stateVars.root.after(random.randint(60, 180), apply_crt_flicker)
+    stateVars.root.after(random.randint(10, 100), apply_crt_flicker)
 
 # Gamble
 def testLuck():
@@ -95,25 +97,25 @@ def process_print_queue():
 
     stateVars.is_printing = False
     text_to_print = stateVars.print_queue.pop(0)
-    stateVars.termText.config(stateVars="normal")
+    stateVars.termText.config(state="normal")
     stateVars.termText.insert("end", "\n")
-    stateVars.termText.config(stateVars="disabled")
+    stateVars.termText.config(state="disabled")
 
     def type_chars(remaining_text):
-        stateVars.termText.config(stateVars="normal")
+        stateVars.termText.config(state="normal")
         if remaining_text:
             stateVars.termText.insert("end", remaining_text[0])
             stateVars.termText.see("end")
-            stateVars.termText.config(stateVars="disabled")
+            stateVars.termText.config(state="disabled")
             stateVars.root.after(25, lambda: type_chars(remaining_text[1:]))
         else:
-            stateVars.termText.config(stateVars="normal")
+            stateVars.termText.config(state="normal")
             if stateVars.print_queue:
                 pass
             else:
                 stateVars.termText.insert("end", "\n> ")
             stateVars.termText.see("end")
-            stateVars.termText.config(stateVars="disabled")
+            stateVars.termText.config(state="disabled")
             process_print_queue()
 
     stateVars.root.after(100, lambda: type_chars(text_to_print))
@@ -125,9 +127,9 @@ def print_term(text):
 
 # Terminal commands
 def clear_term():
-    stateVars.termText.config(stateVars="normal")
+    stateVars.termText.config(state="normal")
     stateVars.termText.delete("1.0", "end")
-    stateVars.termText.config(stateVars="disabled")
+    stateVars.termText.config(state="disabled")
     print_term("")
 
 def load_playerlist():
@@ -205,8 +207,11 @@ def toggle_pause():
         if stateVars.current_timer_id:
             stateVars.root.after_cancel(stateVars.current_timer_id)
             stateVars.current_timer_id = None
+        stateVars.quizQuestionLabel.config(text="QUESTION HIDDEN!")
         stateVars.quizPauseButton.config(text="RESUME")
     else:
+        current_question = stateVars.quiz_active_questions[stateVars.current_question_idx]
+        stateVars.quizQuestionLabel.config(text=current_question)
         stateVars.quizPauseButton.config(text="PAUSE")
         stateVars.current_timer_id = stateVars.root.after(1000, update_quiz_timer)
 
@@ -229,7 +234,7 @@ def force_quit_quiz():
     stateVars.quizPauseButton.place_forget()
     stateVars.quizQuitButton.place_forget()
     stateVars.titleLabel.place(x=(stateVars.rootWidth // 2), y=20, anchor="n")
-    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, stateVars="normal")
+    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="normal")
     pygame.mixer.music.set_volume(0.3)
     show_terminal_from_quiz()
     print_term("Quiz force quit by user \n")
@@ -342,7 +347,8 @@ def begin_quiz_execution():
 
     if stateVars.quiz_settings['rand_players']:
         random.shuffle(stateVars.quiz_active_players)
-
+    
+    stateVars.quiz_active_questions = list(stateVars.questions)
     if stateVars.quiz_settings['rand_questions']:
         random.shuffle(stateVars.quiz_active_questions)
 
@@ -356,16 +362,16 @@ def hide_terminal_for_quiz():
     stateVars.termText.place_forget()
     stateVars.promptLabel.place_forget()
     stateVars.termEntry.place_forget()
-    stateVars.crt_canvas.itemconfigure("scanlines", stateVars="hidden")
-    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, stateVars="hidden")
+    stateVars.crt_canvas.itemconfigure("scanlines", state="hidden")
+    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="hidden")
     stateVars.root.focus_set()
 
 def show_terminal_from_quiz():
     stateVars.termText.place(x=15, y=80, width=(stateVars.rootWidth - 30), height=(stateVars.rootHeight - 200))
     stateVars.promptLabel.place(x=15, y=(stateVars.rootHeight - 55))
     stateVars.termEntry.place(x=35, y=(stateVars.rootHeight - 55), width=(stateVars.rootWidth - 50), height=30)
-    stateVars.crt_canvas.itemconfigure("scanlines", stateVars="normal")
-    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, stateVars="normal")
+    stateVars.crt_canvas.itemconfigure("scanlines", state="normal")
+    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="normal")
     stateVars.termEntry.focus()
 
 def show_next_quiz_turn():
@@ -444,8 +450,8 @@ def start_actual_question():
         stateVars.root.after_cancel(stateVars.current_timer_id)
         stateVars.current_timer_id = None
 
-    time_remaining = stateVars.quiz_settings['time_limit']
-    stateVars.quizTimerLabel.config(text=f"Time: {time_remaining}s", fg=stateVars.foreground_colour, font=timerFont)
+    stateVars.time_remaining = stateVars.quiz_settings['time_limit']
+    stateVars.quizTimerLabel.config(text=f"Time: {stateVars.time_remaining}s", fg=stateVars.foreground_colour, font=timerFont)
     stateVars.quizTimerLabel.place(x=(stateVars.rootWidth // 2), y=410, anchor="n")
 
     stateVars.quizPauseButton.place(x=(stateVars.rootWidth // 2 - 110), y=500, width=100, height=40)
@@ -459,7 +465,7 @@ def update_quiz_timer():
         return
     if stateVars.time_remaining > 0:
         stateVars.time_remaining -= 1
-        stateVars.quizTimerLabel.config(f"Time: {stateVars.time_remaining}s")
+        stateVars.quizTimerLabel.config(text=f"Time: {stateVars.time_remaining}s")
         stateVars.current_timer_id = stateVars.root.after(1000, update_quiz_timer)
     else:
         handle_timeout()
@@ -474,7 +480,6 @@ def handle_timeout():
     prepare_for_next_turn()
 
 def flash_screen(colour, message):
-
     winnerFont = font.Font(family=stateVars.mainFontFamily, size=48, underline=True, weight="bold")
 
     stateVars.waiting_for_next = True
@@ -488,6 +493,7 @@ def flash_screen(colour, message):
     stateVars.quizQuestionLabel.config(bg=colour, fg="#000000", font=winnerFont)
     stateVars.quizTimerLabel.config(bg=colour, fg="#000000")
     stateVars.quizStatusLabel.config(bg=colour, fg="#000000")
+    stateVars.clockLabel.config(bg=colour, fg="#000000")
     stateVars.quizPauseButton.place_forget()
     stateVars.quizQuitButton.place_forget()
     
@@ -502,6 +508,7 @@ def reset_screen_colours():
     questionFont = font.Font(family=stateVars.mainFontFamily, size=24, weight="bold")
     timerFont = font.Font(family=stateVars.mainFontFamily, size=18, weight="bold")
     statusFont = font.Font(family=stateVars.mainFontFamily, size=17)
+    descFont = font.Font(family=stateVars.mainFontFamily, size=14)
 
     stateVars.root.configure(bg=stateVars.background_colour)
     stateVars.crt_canvas.configure(bg=stateVars.background_colour)
@@ -509,6 +516,7 @@ def reset_screen_colours():
     stateVars.quizQuestionLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=questionFont)
     stateVars.quizTimerLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=timerFont)
     stateVars.quizStatusLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=statusFont)
+    stateVars.clockLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=descFont)
 
 def handle_quiz_keypress(event):
     playerFont = font.Font(family=stateVars.mainFontFamily, size=48, weight="bold", underline=True)
@@ -534,7 +542,7 @@ def handle_quiz_keypress(event):
                 if stateVars.quiz_settings['default_last_chance']:
                     status_text += f" | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
                 stateVars.quizStatusLabel.config(text=status_text, fg=stateVars.foreground_colour, font=statusFont)
-                stateVars.quizStatusLabel.place(x=(stateVars.rootWidth // 2), y=330, anchpr="n")
+                stateVars.quizStatusLabel.place(x=(stateVars.rootWidth // 2), y=330, anchor="n")
 
                 stateVars.quizTimerLabel.config(text=f"Time Remaining: {stateVars.time_remaining}s", fg=stateVars.foreground_colour, font=timerFont)
                 stateVars.quizTimerLabel.place(x=(stateVars.rootWidth // 2), y=410, anchor="n")
@@ -642,8 +650,8 @@ def handle_winner_keypress(event):
     stateVars.quizQuestionLabel.place_forget()
     stateVars.titleLabel.place(x=(stateVars.rootWidth // 2), y=20, anchor="n")
     pygame.mixer.music.set_volume(0.3)
-    stateVars.crt_canvas.itemconfigure("scanlines", stateVars="normal")
-    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, stateVars="normal")
+    stateVars.crt_canvas.itemconfigure("scanlines", state="normal")
+    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="normal")
     show_terminal_from_quiz()
     print_term("Quiz finished and winner has been crowned! \n")
     return "break"
@@ -661,8 +669,8 @@ def end_quiz(msg):
     stateVars.quizQuitButton.place_forget()
     stateVars.titleLabel.place(x=(stateVars.rootWidth // 2), y=20, anchor="n")
     pygame.mixer.music.set_volume(0.3)
-    stateVars.crt_canvas.itemconfigure("scanlines", stateVars="normal")
-    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, stateVars="normal")
+    stateVars.crt_canvas.itemconfigure("scanlines", state="normal")
+    stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="normal")
     show_terminal_from_quiz()
     print_term(msg)
 
@@ -671,15 +679,15 @@ def execute_command(e=None):
     stateVars.termEntry.delete(0, "end")
 
     if stateVars.quiz_setup_step > 0:
-        stateVars.termText.config(stateVars="normal")
+        stateVars.termText.config(state="normal")
         stateVars.termText.insert("end", f"{raw_cmd}\n")
-        stateVars.termText.config(stateVars="disabled")
+        stateVars.termText.config(state="disabled")
         handle_quiz_setup_input(raw_cmd)
         return
 
-    stateVars.termText.config(stateVars="normal")
+    stateVars.termText.config(state="normal")
     stateVars.termText.insert("end", f"{raw_cmd}")
-    stateVars.termText.config(stateVars="disabled")
+    stateVars.termText.config(state="disabled")
 
     sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
 
@@ -716,3 +724,8 @@ def execute_command(e=None):
             print_term(f"Unknown command: '{cmd}'. Type 'help'.\n")
             break
 
+# This file cannot be run, it is a Python (.py) file with all of the functions that assists main.py working in CRT-MultiApp.
+# This is not a module on PyPI (Python Package Index) eitherm it is only a module that contains the definitions necessary for the main function of CRT-MultiApp's main.py file to work.
+# If you have stumbled across this file somehow and it is not in the same directory as main.py for CRT-MultiApp, then go to:
+# https://github.com/sadgituser/CRT-MultiApp
+# and download the executable from the releases page

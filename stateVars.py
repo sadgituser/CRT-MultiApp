@@ -1,6 +1,6 @@
 import tkinter as tk
 
-# Widgets and Windows! (root & quiz)
+# Widgets and Windows
 root = None
 crt_canvas = None
 moving_scanline = None
@@ -29,13 +29,13 @@ bg_music_path = "bg_music.mp3"
 players = []
 questions = []
 print_queue = []
-is_printing = []
-quiz_ready = []
+is_printing = False
+quiz_ready = False
 quiz_settings = {
     "rand_questions": False,
     "rand_players": False,
     "time_limit": 15,
-    "default_skips": 2,
+    "default_skips": 1,
     "default_last_chance": True
 }
 quiz_active_players = []
@@ -52,3 +52,9 @@ winner_flashing = False
 winner_timer_id = None
 winner_can_exit = False
 quiz_setup_step = 0
+
+# This file cannot be run, it is a Python (.py) file with all of the variables that assists main.py working in CRT-MultiApp.
+# This is not a module on PyPI (Python Package Index) eitherm it is only a module that contains the variables necessary for the main function of CRT-MultiApp's main.py file to work.
+# If you have stumbled across this file somehow and it is not in the same directory as main.py for CRT-MultiApp, then go to:
+# https://github.com/sadgituser/CRT-MultiApp
+# and download the executable from the releases page
