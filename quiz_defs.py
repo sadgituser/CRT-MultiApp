@@ -5,6 +5,7 @@ import random
 import time
 import os
 import stateVars
+import keyboard_defs
 
 # Early defs in main.py
 def resource_path(relative_path):
@@ -705,6 +706,7 @@ def execute_command(e=None):
         "syntax": lambda: show_syntax(),
         "rickroll": lambda: (print_term("RICKROLL!\n"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble...\n"), testLuck()),
+        "keyboard": lambda: (keyboard_defs.start_keyboard_game),
         "clear": lambda: (clear_term()),
         "cls": lambda: (clear_term()),
         "about": lambda: (print_term("Terra CRT App!\n"), openMePages()),

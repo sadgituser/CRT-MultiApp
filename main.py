@@ -1,3 +1,4 @@
+# Imports
 import tkinter as tk
 from tkinter import *
 import sys
@@ -41,7 +42,6 @@ for y in range(0, stateVars.rootHeight, 3):
 moving_scanline = stateVars.crt_canvas.create_line(0, 0, stateVars.rootWidth, 0, fill="#00FF44", width=10, stipple="gray25")
 scanline_y = 0
 stateVars.moving_scanline = moving_scanline
-
 
 
 # Fonts
