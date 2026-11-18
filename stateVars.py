@@ -8,6 +8,7 @@ scanline_y = 0
 titleLabel = None
 clockLabel = None
 termText = None
+typeSpeed = 25
 promptLabel = None
 termEntry = None
 quizPlayerLabel = None
