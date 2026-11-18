@@ -7,6 +7,65 @@ import os
 import stateVars
 import config_manager
 
+# command history
+command_history = []
+history_index = 0
+current_input = ""
+
+def load_saved_history():
+    global command_history, history_index
+    command_history = config_manager.load_command_history(stateVars.config)
+    command_history = command_history[-7:]
+    history_index = len(command_history)
+
+def save_entered_command(command):
+    global command_history, history_index 
+
+    command = command.strip()
+    if not command:
+        return
+
+    command_history.append(command)
+    command_history = command_history[-7:]
+
+    config_manager.save_command_history(stateVars.config, command_history)
+    history_index = len(command_history)
+
+def history_up(event=None):
+    global history_index, current_input 
+
+    if not command_history:
+        return "break"
+
+    if history_index == len(command_history):
+        current_input = stateVars.termEntry.get()
+
+    if history_index > 0:
+        history_index -= 1 
+
+    stateVars.termEntry.delete(0, tk.END)
+    stateVars.termEntry.insert(0, command_history[history_index])
+
+    return "break"
+
+def history_down(event=None):
+    global history_index, current_input
+
+    if not command_history:
+        return "break"
+
+    if history_index < len(command_history) - 1:
+        history_index += 1
+        command = command_history[history_index]
+    else:
+        history_index = len(command_history)
+        command = current_input
+
+    stateVars.termEntry.delete(0, tk.END)
+    stateVars.termEntry.insert(0, command)
+
+    return "break"
+
 # Early defs in main.py
 def resource_path(relative_path):
     import sys, os
@@ -775,12 +834,21 @@ def unlock_app():
     ):
         stateVars.current_timer_id = stateVars.root.after(1000, update_quiz_timer)
 
+
+
 def execute_command(e=None):
     original_cmd = stateVars.termEntry.get().strip()
     raw_cmd = original_cmd.lower()
     stateVars.termEntry.delete(0, "end")
 
-    if raw_cmd.startswith("password set "):
+    if original_cmd:
+        save_entered_command(original_cmd)
+
+    if raw_cmd.startswith(("password set ", "passwordset")):
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", f"{original_cmd}")
+        stateVars.termText.config(state="disabled")
+        
         new_password = original_cmd.split(" ", 2)[2].strip()
 
         if not new_password:
@@ -796,11 +864,15 @@ def execute_command(e=None):
 
         return
     
-    if raw_cmd == "password clear":
+    if raw_cmd in ("password clear", "passwordclear"):
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", f"{raw_cmd}")
+        stateVars.termText.config(state="disabled")
+
         if config_manager.update_config(stateVars.config, password=""):
             print_term("Password cleared.\n")
         else:
-            print_term("failed to clear password\n")
+            print_term("failed to clear password.\n")
 
         return
 

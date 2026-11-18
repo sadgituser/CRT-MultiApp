@@ -33,6 +33,13 @@ DEFAULT_CONFIG = {
     "ai_model": "gpt-4o",
     "ai_provider": "openai",
     "password": "",
+    "command_history_1": "",
+    "command_history_2": "",
+    "command_history_3": "",
+    "command_history_4": "",
+    "command_history_5": "",
+    "command_history_6": "",
+    "command_history_7": "",
 }
 
 def save_config(config, config_file=CONFIG_FILE):
@@ -127,3 +134,32 @@ def update_config(config, **updates):
         return True 
 
     return False
+
+def save_command_history(config, commands):
+    """Saves the last 7 commands to the config file"""
+
+    history = [
+        command.strip()
+        for command in commands
+        if isinstance(command, str) and command.strip()
+    ][-7:]
+
+    updates = {
+        f"command_history_{index + 1}": (
+            history[index] if index < len(history) else ""
+        )
+        for index in range(7)   
+
+    }
+
+    return update_config(config, **updates)
+
+def load_command_history(config):
+    """loads saved commands in order"""
+
+    return [
+        config.get(f"command_history_{index + 1}", "")
+        for index in range(7)
+        if config.get(f"command_history_{index + 1}", "").strip()
+
+    ]
