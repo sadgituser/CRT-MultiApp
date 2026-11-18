@@ -57,6 +57,17 @@ winner_timer_id = None
 winner_can_exit = False
 quiz_setup_step = 0
 
+# password
+is_locked = False 
+lock_frame = None
+lock_password_entry = None
+lock_logo_image = None
+lock_error_label = None 
+lock_was_paused = False
+lock_was_waiting = False
+lock_previous_key_binding = None 
+
+
 # This file cannot be run, it is a Python (.py) file with all of the variables that assists main.py working in CRT-MultiApp.
 # This is not a module on PyPI (Python Package Index) eitherm it is only a module that contains the variables necessary for the main function of CRT-MultiApp's main.py file to work.
 # If you have stumbled across this file somehow and it is not in the same directory as main.py for CRT-MultiApp, then go to:

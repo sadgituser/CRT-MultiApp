@@ -192,4 +192,14 @@ quiz_defs.animate_crt_beam()
 quiz_defs.update_clock()
 
 termEntry.bind("<Return>", quiz_defs.execute_command)
+
+# lock keybind
+
+stateVars.root.bind(
+    "<KeyPress-semicolon>",
+    quiz_defs.lock_app,
+    add="+"
+
+)
+
 stateVars.root.mainloop()
