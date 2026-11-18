@@ -1,5 +1,9 @@
 import tkinter as tk
 
+# Config
+CONFIG_FILE = None
+config = {}
+
 # Widgets and Windows
 root = None
 crt_canvas = None
