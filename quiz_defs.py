@@ -680,6 +680,13 @@ def execute_command(e=None):
         handle_quiz_setup_input(raw_cmd)
         return
 
+    if stateVars.keyboard_game_ready == True:
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", f"{raw_cmd}\n")
+        stateVars.termText.config(state="disabled")
+        keyboard_defs.start_keyboard_game(raw_cmd)
+        return
+
     stateVars.termText.config(state="normal")
     stateVars.termText.insert("end", f"{raw_cmd}")
     stateVars.termText.config(state="disabled")
@@ -687,7 +694,7 @@ def execute_command(e=None):
     sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
 
     commands = {
-        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, cls \n"),
+        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, keyboard game, luck, clear, about, exit, cls \n"),
         "quiz": lambda: (print_term("Available commands: player, question, start, preface, keys, about \nCommands must start with 'quiz '\n"), stateVars.termEntry.insert(tk.END, "quiz ")),
         "quiz preface": lambda: preface_quiz(),
         "quiz keys": lambda: print_term("Quiz Key Bindings:\n- 'y': Correct\n- 'i': Incorrect\n- 'p': Skip\n- 'q': Last Chance\n- 'n': Next\n"),
@@ -706,7 +713,7 @@ def execute_command(e=None):
         "syntax": lambda: show_syntax(),
         "rickroll": lambda: (print_term("RICKROLL!\n"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble...\n"), testLuck()),
-        "keyboard": lambda: (keyboard_defs.start_keyboard_game),
+        "keyboard game": lambda: (keyboard_defs.start_keyboard_game),
         "clear": lambda: (clear_term()),
         "cls": lambda: (clear_term()),
         "about": lambda: (print_term("Terra CRT App!\n"), openMePages()),

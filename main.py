@@ -11,6 +11,7 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import stateVars
 import quiz_defs
+import keyboard_defs
 
 app_icon = quiz_defs.resource_path("app-icon.ico")
 bg_music_path = quiz_defs.resource_path("bg_music.mp3")
@@ -146,11 +147,6 @@ quizStatusLabel = tk.Label(stateVars.root,
 )
 stateVars.quizStatusLabel = quizStatusLabel
 
-
-quiz_setup_step = 0
-winner_flashing = False
-winner_timer_id = None
-winner_can_exit = False
 
 
 quizPauseButton = tk.Button(stateVars.root,
