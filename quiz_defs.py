@@ -129,9 +129,19 @@ def set_speed(speedNum):
     stateVars.typeSpeed = speedNum
     print_term(f"Set typing output speed to {speedNum}ms\n")
 
-def set_custom_speed(params):
-    # Add code for changing the speed using set_speed to a custom speed set by the user. Use raw_input?
-    print_term("Currently not implemented! Feature coming soon!")
+def prompt_custom_speed():
+    stateVars.changing_speed = True
+    print_term("Enter a custom typing output speed (in ms): \n")
+
+def set_custom_speed(raw_cmd):
+    try:
+        type_speed = max(1, int(raw_cmd))
+    except ValueError:
+        type_speed = 25
+        print_term("Invalid integer. Defaulting to 25ms\n")
+    stateVars.typeSpeed = type_speed
+    print_term(f"Set typing output speed to {type_speed}ms\n")
+    stateVars.changing_speed = False
 
 
 # Terminal commands
@@ -185,7 +195,7 @@ def preface_quiz():
         msg += "Players and questions loaded... \nQuiz ready\n"
         stateVars.quiz_ready = True
     elif stateVars.questions and not stateVars.players:
-        msg += "Questions loaded \nPlayers still to be loaded, load players with 'quiz player load' or 'quiz player dfault' for default players\n"
+        msg += "Questions loaded \nPlayers still to be loaded, load players with 'quiz player load' or 'quiz player default' for default players\n"
         stateVars.quiz_ready = False
     elif stateVars.players and not stateVars.questions:
         msg += "Players loaded \nQuestions still to be loaded, load questions with 'quiz question load' or 'quiz question default' for default questions\n"
@@ -690,6 +700,13 @@ def execute_command(e=None):
         handle_quiz_setup_input(raw_cmd)
         return
 
+    if stateVars.changing_speed == True:
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", f"{raw_cmd}\n")
+        stateVars.termText.config(state="disabled")
+        set_custom_speed(raw_cmd)
+        return
+
     stateVars.termText.config(state="normal")
     stateVars.termText.insert("end", f"{raw_cmd}")
     stateVars.termText.config(state="disabled")
@@ -711,8 +728,8 @@ def execute_command(e=None):
         "quiz question lookup": lambda: show_questionlist(),
         "quiz player default": lambda: load_default_players(),
         "quiz question default": lambda: load_default_questions(),
-        "suggest": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
-        "bug": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md")),
+        "bug": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
+        "suggest": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md")),
         "syntax": lambda: show_syntax(),
         "clock": lambda: (print_term("Available commands: show, hide\n"), stateVars.termEntry.insert(tk.END, "clock ")),
         "clock show": lambda: ((stateVars.clockLabel.place(x=(stateVars.rootWidth - 15), y=20, anchor="ne")), print_term("Showing clock\n")), 
@@ -727,7 +744,7 @@ def execute_command(e=None):
         "speed fast": lambda: (set_speed(10)), 
         "speed default": lambda: (set_speed(25)),
         "speed slow": lambda: (set_speed(45)),
-        "speed custom": lambda: set_custom_speed(),
+        "speed custom": lambda: prompt_custom_speed(),
         "rickroll": lambda: (print_term("RICKROLL!\n"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble...\n"), testLuck()),
         "clear": lambda: (clear_term()),

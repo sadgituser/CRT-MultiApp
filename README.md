@@ -28,7 +28,7 @@ The **projected** OS versions will be:
 
 <p align="center">
     
-That is basically it, if you want to try it out, then download the latest [Release](https://github.com/sadgituser/Python-Quiz/releases) from GitHub for your OS!
+That is basically it, if you want to try it out, then download the latest [Release](https://github.com/sadgituser/CRT-MultiApp/releases) from GitHub for your OS!
 
 Ensure to use `chmod +x` if running the file on Linux to grant executing permissions!
 

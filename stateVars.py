@@ -9,6 +9,7 @@ titleLabel = None
 clockLabel = None
 termText = None
 typeSpeed = 25
+changing_speed = False
 promptLabel = None
 termEntry = None
 quizPlayerLabel = None
