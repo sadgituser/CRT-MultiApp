@@ -10,6 +10,7 @@ clockLabel = None
 termText = None
 typeSpeed = 25
 changing_speed = False
+is_flickering = False
 promptLabel = None
 termEntry = None
 quizPlayerLabel = None
