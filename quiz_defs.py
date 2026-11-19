@@ -862,6 +862,9 @@ def unlock_app():
 
 
 def execute_command(e=None):
+    if stateVars.is_printing:
+        return "break"
+
     original_cmd = stateVars.termEntry.get().strip()
     raw_cmd = original_cmd.lower().strip()
     stateVars.termEntry.delete(0, "end")
