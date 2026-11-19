@@ -3,7 +3,7 @@ So far, all code has been written by **[sadgituser](https://github.com/sadgituse
 This file will change as people contribute code. A more detailed overview of what exact code was written by who can be seen in the [pull requests](https://github.com/sadgituser/CRT-MultiApp/pulls).
 
 
-Here are the canges made by [iamthehunter1](https://github.com/iamthehunter1):
+Here are the changes made by [iamthehunter1](https://github.com/iamthehunter1) so far:
 • Added all password handling
 • Added all config handling
 • Added all lock screen handling
