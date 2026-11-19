@@ -33,6 +33,14 @@ DEFAULT_CONFIG = {
     "ai_model": "gpt-4o",
     "ai_provider": "openai",
     "password": "",
+    "locked": False,
+    "command_history_1": "",
+    "command_history_2": "",
+    "command_history_3": "",
+    "command_history_4": "",
+    "command_history_5": "",
+    "command_history_6": "",
+    "command_history_7": "",
 }
 
 def save_config(config, config_file=CONFIG_FILE):
@@ -86,9 +94,9 @@ def load_config(config_file=CONFIG_FILE):
         config.update(loaded_config)
 
         # validate config setttings
-        for key in DEFAULT_CONFIG:
-            if not isinstance(config.get(key), str):
-                config[key] = DEFAULT_CONFIG[key]
+        for key, default_value in DEFAULT_CONFIG.items():
+            if not isinstance(config.get(key), type(default_value)):
+                config[key] = default_value
 
         if not config["ai_model"].strip():
             config["ai_model"] = DEFAULT_CONFIG["ai_model"]
@@ -115,8 +123,12 @@ def update_config(config, **updates):
         if key not in DEFAULT_CONFIG:
             raise ValueError(f"unknown config setting '{key}' ")
         
-        if not isinstance(value, str):
-            raise TypeError(f"config setting '{key}' must be a string")
+        expected_type = type(DEFAULT_CONFIG[key])
+
+        if not isinstance(value, expected_type):
+            raise TypeError(f"config setting '{key}' must be " 
+            f"{expected_type.__name__}"
+            )
 
     updated_config = config.copy()
     updated_config.update(updates)
@@ -127,3 +139,32 @@ def update_config(config, **updates):
         return True 
 
     return False
+
+def save_command_history(config, commands):
+    """Saves the last 7 commands to the config file"""
+
+    history = [
+        command.strip()
+        for command in commands
+        if isinstance(command, str) and command.strip()
+    ][-7:]
+
+    updates = {
+        f"command_history_{index + 1}": (
+            history[index] if index < len(history) else ""
+        )
+        for index in range(7)   
+
+    }
+
+    return update_config(config, **updates)
+
+def load_command_history(config):
+    """loads saved commands in order"""
+
+    return [
+        config.get(f"command_history_{index + 1}", "")
+        for index in range(7)
+        if config.get(f"command_history_{index + 1}", "").strip()
+
+    ]
