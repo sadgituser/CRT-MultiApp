@@ -10,6 +10,12 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import stateVars
 import quiz_defs
+import config_manager
+
+stateVars.CONFIG_FILE = config_manager.CONFIG_FILE 
+stateVars.config = config_manager.load_config()
+
+quiz_defs.load_saved_history()
 
 app_icon = quiz_defs.resource_path("app-icon.ico")
 bg_music_path = quiz_defs.resource_path("bg_music.mp3")
@@ -112,6 +118,8 @@ termEntry.place(x=35, y=(stateVars.rootHeight - 55), width=(stateVars.rootWidth 
 termEntry.focus()
 stateVars.termEntry = termEntry
 
+termEntry.bind("<Up>", quiz_defs.history_up)
+termEntry.bind("<Down>", quiz_defs.history_down)
 
 quizPlayerLabel = tk.Label(stateVars.root, 
     font=playerFont, 
@@ -188,4 +196,19 @@ quiz_defs.animate_crt_beam()
 quiz_defs.update_clock()
 
 termEntry.bind("<Return>", quiz_defs.execute_command)
+
+# lock keybind
+
+stateVars.root.bind(
+    "<KeyPress-semicolon>",
+    quiz_defs.lock_app,
+    add="+"
+
+)
+
+#restore the lock screen
+
+if stateVars.config.get("locked", False):
+    quiz_defs.lock_app()
+
 stateVars.root.mainloop()

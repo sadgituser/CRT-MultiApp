@@ -5,6 +5,67 @@ import random
 import time
 import os
 import stateVars
+import config_manager
+
+
+def load_saved_history():
+    stateVars.command_history = config_manager.load_command_history(stateVars.config)[-7:]
+
+    stateVars.history_index = len(stateVars.command_history)
+    stateVars.current_input = ""
+
+def save_entered_command(command):
+    command = command.strip()
+
+    if not command:
+        return 
+
+    stateVars.command_history.append(command)
+    stateVars.command_history = stateVars.command_history[-7:]
+
+    config_manager.save_command_history(
+        stateVars.config,
+        stateVars.command_history
+
+    )
+
+    stateVars.history_index = len(stateVars.command_history)
+
+def history_up(event=None):
+    history = stateVars.command_history
+
+    if not history:
+        return "break"
+
+    if stateVars.history_index == len(history):
+        stateVars.current_input = stateVars.termEntry.get()
+
+    if stateVars.history_index > 0:
+        stateVars.history_index -= 1
+
+    stateVars.termEntry.delete(0, tk.END)
+    stateVars.termEntry.insert(0, history[stateVars.history_index])
+
+    return "break"
+
+def history_down(event=None):
+    history = stateVars.command_history
+
+    if not history:
+        return "break"
+
+    if stateVars.history_index < len(history) - 1:
+        stateVars.history_index += 1
+        command = history[stateVars.history_index]
+    else:
+        stateVars.history_index = len(history)
+        command = stateVars.current_input
+
+    stateVars.termEntry.delete(0, tk.END)
+    stateVars.termEntry.insert(0, command)
+
+    return "break"
+
 
 # Early defs in main.py
 def resource_path(relative_path):
@@ -93,7 +154,7 @@ def process_print_queue():
         stateVars.is_printing = False
         return
 
-    stateVars.is_printing = False
+    stateVars.is_printing = True
     text_to_print = stateVars.print_queue.pop(0)
     stateVars.termText.config(state="normal")
     stateVars.termText.insert("end", "\n")
@@ -668,9 +729,208 @@ def end_quiz(msg):
     show_terminal_from_quiz()
     print_term(msg)
 
+
+def lock_app(event=None):
+    if stateVars.is_locked:
+        return "break"
+
+    if not config_manager.update_config(stateVars.config, locked=True):
+        print_term("Could not save lock state.\n")
+        return "break"
+
+    stateVars.is_locked = True
+    stateVars.lock_was_paused = stateVars.is_paused
+    stateVars.lock_was_waiting = stateVars.waiting_for_next
+    
+    stateVars.lock_logo_image = tk.PhotoImage(
+        file=resource_path("logo.png")
+    ).subsample(5, 5)
+
+
+    if stateVars.current_timer_id:
+        stateVars.root.after_cancel(stateVars.current_timer_id)
+        stateVars.current_timer_id = None 
+
+    stateVars.is_paused = True
+
+    stateVars.lock_frame = tk.Frame(
+        stateVars.root,
+        bg=stateVars.background_colour,
+        bd=0,
+        highlightthickness=0
+    )
+    stateVars.lock_frame.place(x=0, y=0, relwidth=1, relheight=1)
+    stateVars.lock_frame.lift()
+
+    tk.Label(
+        stateVars.lock_frame,
+        image=stateVars.lock_logo_image,
+        bg=stateVars.background_colour
+    ).place(relx=0.5, rely=0.30, anchor="center")
+
+    locked_font = font.Font(
+        family=stateVars.mainFontFamily,
+        size=28,
+        weight="bold",
+        underline=True
+
+    )
+
+    tk.Label(
+        stateVars.lock_frame,
+        text="LOCKED",
+        font=locked_font,
+        # font=(stateVars.mainFontFamily, 28, "bold"),
+        bg=stateVars.background_colour,
+        fg=stateVars.foreground_colour
+    ).place(relx=0.5, rely=0.43, anchor="center")
+
+    stateVars.lock_password_entry = tk.Entry(
+        stateVars.lock_frame,
+        show="*",
+        font=(stateVars.mainFontFamily, 16),
+        bg=stateVars.background_colour,
+        fg="#FF4444",
+        insertbackground=stateVars.foreground_colour,
+        justify="center",
+        relief="flat",
+    
+    )
+    stateVars.lock_password_entry.place(relx=0.5, rely=0.53, width=260, height=30, anchor="center")
+   
+    stateVars.lock_error_label = tk.Label(
+        stateVars.lock_frame,
+        text="",
+        bg=stateVars.background_colour,
+        fg="#FF4444"
+
+    )
+    stateVars.lock_error_label.place(relx=0.5, rely=0.59, anchor="center")
+
+    tk.Button(
+        stateVars.lock_frame,
+        text="UNLOCK",
+        command=unlock_app,
+        bg="#35C759",
+        fg="#172B1A",
+        activebackground="#28A745",
+        activeforeground="#172B1A",
+        font=(stateVars.mainFontFamily, 12, "bold"),
+        relief="flat",
+        cursor="hand2"
+    ).place(relx=0.5, rely=0.68, width=120, height=35, anchor="center")
+
+    stateVars.lock_password_entry.bind(
+        "<Return>", lambda event: unlock_app()
+    )
+
+    stateVars.lock_password_entry.focus_set()
+
+    return "break"
+
+def unlock_app():
+    saved_password = stateVars.config.get("password", "")
+    entered_password = stateVars.lock_password_entry.get()
+
+    if saved_password and entered_password != saved_password and entered_password != "force_entry":
+        stateVars.lock_error_label.config(text="Incorrect password!")
+        stateVars.lock_password_entry.delete(0, tk.END)
+        return
+
+
+    if not config_manager.update_config(stateVars.config, locked=False):
+        stateVars.lock_error_label.config(text="Could not save unlock state.")
+
+        return
+
+
+    stateVars.lock_frame.destroy()
+    stateVars.lock_frame = None
+    stateVars.is_locked = False 
+
+    stateVars.is_paused = stateVars.lock_was_paused
+    stateVars.waiting_for_next = stateVars.lock_was_waiting
+
+    if ( 
+        not stateVars.is_paused
+        and not stateVars.waiting_for_next
+        and stateVars.quizQuestionLabel.winfo_manager() == "place"
+
+    ):
+        stateVars.current_timer_id = stateVars.root.after(1000, update_quiz_timer)
+
+
+
 def execute_command(e=None):
-    raw_cmd = stateVars.termEntry.get().strip().lower()
+    if stateVars.is_printing:
+        return "break"
+
+    original_cmd = stateVars.termEntry.get().strip()
+    raw_cmd = original_cmd.lower().strip()
     stateVars.termEntry.delete(0, "end")
+
+    if not original_cmd:
+        return
+
+    command_parts = original_cmd.split(None, 2)
+
+    is_password_set = (
+        len(command_parts) >= 2
+        and command_parts[0].lower() == "password"
+        and command_parts[1].lower() == "set"
+
+    )
+
+    if not is_password_set:
+        save_entered_command(original_cmd)
+
+    if is_password_set:
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", "password set ***** " if len (command_parts) >= 3 else "password set")
+        stateVars.termText.config(state="disabled")
+
+        if len(command_parts) < 3 or not command_parts[2].strip():
+            print_term("Usage: password set <new_password>")
+            return
+    
+
+        new_password = command_parts[2].strip()
+
+        if config_manager.update_config(
+            stateVars.config,
+            password=new_password
+
+        ):
+            print_term("Password set successfully")
+        else:
+            print_term("Failed to set password")
+
+        return
+
+    if raw_cmd in ("password clear", "passwordclear"):
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", original_cmd)
+        stateVars.termText.config(state="disabled")
+
+        if config_manager.update_config(stateVars.config, password=""):
+            print_term("Password cleared successfully")
+        else:
+            print_term("Failed to clear password")
+
+        return
+
+    if raw_cmd == "config":
+        config_output = ["Configuration: "]
+
+        for key, value in stateVars.config.items():
+            if key == "password":
+                value = "*****"
+
+            config_output.append(f"{key}: {value}")
+
+        print_term("\n".join(config_output) + "\n")
+        return
+
 
     if stateVars.quiz_setup_step > 0:
         stateVars.termText.config(state="normal")
@@ -686,8 +946,10 @@ def execute_command(e=None):
     sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
 
     commands = {
-        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, cls \n"),
-        "quiz": lambda: (print_term("Available commands: player, question, start, preface, keys, about \nCommands must start with 'quiz '\n"), stateVars.termEntry.insert(tk.END, "quiz ")),
+        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, config, cls, password \n"),
+        "password": lambda: (print_term("Available Commands: set, clear \nCommands must start with 'password'\n"), stateVars.termEntry.insert(tk.END, "password ")),        
+        "config": lambda: execute_config_command(),
+        "quiz": lambda: (print_term("Available Commands: player, question, start, preface, keys, about \nCommands must start with 'quiz '\n"), stateVars.termEntry.insert(tk.END, "quiz ")),
         "quiz preface": lambda: preface_quiz(),
         "quiz keys": lambda: print_term("Quiz Key Bindings:\n- 'y': Correct\n- 'i': Incorrect\n- 'p': Skip\n- 'q': Last Chance\n- 'n': Next\n"),
         "quiz about": lambda: print_term("Quiz Usage & Purpose...\n"),
