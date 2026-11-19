@@ -29,12 +29,14 @@ def update_clock():
     stateVars.root.after(500, update_clock)
 
 def apply_crt_flicker():
+    global flickering
     glow_colours = ["#00FF00", "#00DD00", "#22FF22", "#00EE00", "#1BF81B", "#0DD30D"]
     chosen_colour = random.choice(glow_colours)
     stateVars.titleLabel.configure(fg=chosen_colour)
     stateVars.termText.configure(fg=chosen_colour)
     stateVars.termEntry.configure(fg=chosen_colour)
-    stateVars.root.after(random.randint(10, 100), apply_crt_flicker)
+    flickering = stateVars.root.after(random.randint(10, 100), apply_crt_flicker)
+    flickering
 
 # Gamble
 def testLuck():
@@ -87,7 +89,7 @@ def openMePages():
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
     webbrowser.open_new("mailto:kavi@mistrypi.dev")
 
-# Text on stateVars.termText
+# Text to screen
 def process_print_queue():
     if not stateVars.print_queue:
         stateVars.is_printing = False
@@ -105,7 +107,7 @@ def process_print_queue():
             stateVars.termText.insert("end", remaining_text[0])
             stateVars.termText.see("end")
             stateVars.termText.config(state="disabled")
-            stateVars.root.after(25, lambda: type_chars(remaining_text[1:]))
+            stateVars.root.after(stateVars.typeSpeed, lambda: type_chars(remaining_text[1:]))
         else:
             stateVars.termText.config(state="normal")
             if stateVars.print_queue:
@@ -122,6 +124,25 @@ def print_term(text):
     stateVars.print_queue.append(text)
     if not stateVars.is_printing:
         process_print_queue()
+
+def set_speed(speedNum):
+    stateVars.typeSpeed = speedNum
+    print_term(f"Set typing output speed to {speedNum}ms\n")
+
+def prompt_custom_speed():
+    stateVars.changing_speed = True
+    print_term("Enter a custom typing output speed (in ms): \n")
+
+def set_custom_speed(raw_cmd):
+    try:
+        type_speed = max(1, int(raw_cmd))
+    except ValueError:
+        type_speed = 25
+        print_term("Invalid integer. Defaulting to 25ms\n")
+    stateVars.typeSpeed = type_speed
+    print_term(f"Set typing output speed to {type_speed}ms\n")
+    stateVars.changing_speed = False
+
 
 # Terminal commands
 def clear_term():
@@ -174,7 +195,7 @@ def preface_quiz():
         msg += "Players and questions loaded... \nQuiz ready\n"
         stateVars.quiz_ready = True
     elif stateVars.questions and not stateVars.players:
-        msg += "Questions loaded \nPlayers still to be loaded, load players with 'quiz player load' or 'quiz player dfault' for default players\n"
+        msg += "Questions loaded \nPlayers still to be loaded, load players with 'quiz player load' or 'quiz player default' for default players\n"
         stateVars.quiz_ready = False
     elif stateVars.players and not stateVars.questions:
         msg += "Players loaded \nQuestions still to be loaded, load questions with 'quiz question load' or 'quiz question default' for default questions\n"
@@ -363,7 +384,7 @@ def hide_terminal_for_quiz():
     stateVars.root.focus_set()
 
 def show_terminal_from_quiz():
-    stateVars.termText.place(x=15, y=80, width=(stateVars.rootWidth - 30), height=(stateVars.rootHeight - 200))
+    stateVars.termText.place(x=15, y=80, width=(stateVars.rootWidth - 30), height=(stateVars.rootHeight - 150))
     stateVars.promptLabel.place(x=15, y=(stateVars.rootHeight - 55))
     stateVars.termEntry.place(x=35, y=(stateVars.rootHeight - 55), width=(stateVars.rootWidth - 50), height=30)
     stateVars.crt_canvas.itemconfigure("scanlines", state="normal")
@@ -420,7 +441,8 @@ def show_next_quiz_turn():
     stateVars.quizStatusLabel.place(x=(stateVars.rootWidth // 2), y=150, anchor="n")
 
     stateVars.root.unbind("<Key>")
-    stateVars.root.after(3000, start_actual_question)
+    stateVars.intro_timer_id = stateVars.root.after(3000, start_actual_question)
+    stateVars.intro_timer_id
 
 def start_actual_question():
     player = stateVars.quiz_active_players[stateVars.current_player_idx]
@@ -558,6 +580,7 @@ def handle_quiz_keypress(event):
                 stateVars.quizPauseButton.place_forget()
                 stateVars.quizQuitButton.place_forget()
                 stateVars.titleLabel.place(x=(stateVars.rootWidth // 2), y=20, anchor="n")
+                stateVars.is_last_chance_action = False
 
                 stateVars.current_question_idx += 1
                 stateVars.current_player_idx = (stateVars.current_player_idx + 1) % len(stateVars.quiz_active_players)
@@ -679,6 +702,13 @@ def execute_command(e=None):
         handle_quiz_setup_input(raw_cmd)
         return
 
+    if stateVars.changing_speed == True:
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", f"{raw_cmd}\n")
+        stateVars.termText.config(state="disabled")
+        set_custom_speed(raw_cmd)
+        return
+
     stateVars.termText.config(state="normal")
     stateVars.termText.insert("end", f"{raw_cmd}")
     stateVars.termText.config(state="disabled")
@@ -686,7 +716,7 @@ def execute_command(e=None):
     sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
 
     commands = {
-        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, cls \n"),
+        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clock, flicker, speed, beam, clear, about, exit, cls \n"),
         "quiz": lambda: (print_term("Available commands: player, question, start, preface, keys, about \nCommands must start with 'quiz '\n"), stateVars.termEntry.insert(tk.END, "quiz ")),
         "quiz preface": lambda: preface_quiz(),
         "quiz keys": lambda: print_term("Quiz Key Bindings:\n- 'y': Correct\n- 'i': Incorrect\n- 'p': Skip\n- 'q': Last Chance\n- 'n': Next\n"),
@@ -700,9 +730,23 @@ def execute_command(e=None):
         "quiz question lookup": lambda: show_questionlist(),
         "quiz player default": lambda: load_default_players(),
         "quiz question default": lambda: load_default_questions(),
-        "suggest": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
-        "bug": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md")),
+        "bug": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
+        "suggest": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md")),
         "syntax": lambda: show_syntax(),
+        "clock": lambda: (print_term("Available commands: show, hide\n"), stateVars.termEntry.insert(tk.END, "clock ")),
+        "clock show": lambda: ((stateVars.clockLabel.place(x=(stateVars.rootWidth - 15), y=20, anchor="ne")), print_term("Showing clock\n")), 
+        "clock hide": lambda: ((stateVars.clockLabel.place_forget()), print_term("Clock hidden\n")),
+        "flicker": lambda: (print_term("Available commands: start, stop\n"), stateVars.termEntry.insert(tk.END, "flicker ")),
+        "flicker start": lambda: ((apply_crt_flicker()), print_term("Flickering started\n")), 
+        "flicker stop": lambda: ((stateVars.root.after_cancel(flickering)), print_term("Flickering stopped\n")),
+        "beam": lambda: (print_term("Available commands: start, stop\n"), stateVars.termEntry.insert(tk.END, "beam ")),
+        "beam start": lambda: ((stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="normal")), print_term("Beaming\n")), 
+        "beam stop": lambda: ((stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="hidden")), print_term("Beam stopped\n")),
+        "speed": lambda: (print_term("Available commands: fast, default, slow, custom\n"), stateVars.termEntry.insert(tk.END, "speed ")),
+        "speed fast": lambda: (set_speed(10)), 
+        "speed default": lambda: (set_speed(25)),
+        "speed slow": lambda: (set_speed(45)),
+        "speed custom": lambda: prompt_custom_speed(),
         "rickroll": lambda: (print_term("RICKROLL!\n"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
         "luck": lambda: (print_term("Opening Lucky Gamble...\n"), testLuck()),
         "clear": lambda: (clear_term()),
