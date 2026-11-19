@@ -67,6 +67,11 @@ lock_was_paused = False
 lock_was_waiting = False
 lock_previous_key_binding = None 
 
+#command history
+command_history = []
+history_index = 0
+current_input = ""
+
 
 # This file cannot be run, it is a Python (.py) file with all of the variables that assists main.py working in CRT-MultiApp.
 # This is not a module on PyPI (Python Package Index) eitherm it is only a module that contains the variables necessary for the main function of CRT-MultiApp's main.py file to work.

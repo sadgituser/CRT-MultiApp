@@ -206,4 +206,9 @@ stateVars.root.bind(
 
 )
 
+#restore the lock screen
+
+if stateVars.config.get("locked", False):
+    quiz_defs.lock_app()
+
 stateVars.root.mainloop()
