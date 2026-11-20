@@ -91,7 +91,7 @@ termText = tk.Text(stateVars.root,
     relief="flat"
 )
 termText.place(x=15, y=80, width=(stateVars.rootWidth - 30), height=(stateVars.rootHeight - 150))
-termText.insert("end", "CRT OS v1.5\nType 'help' for commands. \n\n> ")
+termText.insert("end", "CRT OS v1.7\nType 'help' for commands. \n\n> ")
 termText.config(state="disabled")
 stateVars.termText = termText
 
