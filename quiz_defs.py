@@ -188,7 +188,7 @@ def print_term(text):
 def clear_term():
     stateVars.termText.config(state="normal")
     stateVars.termText.delete("1.0", "end")
-    stateVars.termText.insert("end", "CRT OS v1.5\nType 'help' for commands. \n\n>")
+    stateVars.termText.insert("end", "CRT OS v1.7\nType 'help' for commands. \n\n>")
     stateVars.termText.config(state="disabled")
 
 def load_playerlist():
