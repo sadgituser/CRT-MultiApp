@@ -155,12 +155,6 @@ quizStatusLabel = tk.Label(stateVars.root,
 stateVars.quizStatusLabel = quizStatusLabel
 
 
-quiz_setup_step = 0
-winner_flashing = False
-winner_timer_id = None
-winner_can_exit = False
-
-
 quizPauseButton = tk.Button(stateVars.root,
     text="PAUSE",
     font=descFont,

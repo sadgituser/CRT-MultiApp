@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import font
 
 # Config
 CONFIG_FILE = None
@@ -21,13 +22,24 @@ quizStatusLabel = None
 quizPauseButton = None
 quizQuitButton = None
 
-# root window variables
+# 'root' window variables
 rootWidth, rootHeight = 800, 700
 background_colour, foreground_colour = "#000000", "#00FF00"
 active_background_colour, active_foreground_colour = "#00CC00", "#000000"
 mainFontFamily = "Consolas"
 app_icon = "app-icon.ico"
 bg_music_path = "bg_music.mp3"
+
+# Fonts
+titleFont = font.Font(family=mainFontFamily, size=28, underline=True, weight="bold")
+playerFont = font.Font(family=mainFontFamily, size=48, weight="bold", underline=True)
+statusFont = font.Font(family=mainFontFamily, size=17)
+questionFont = font.Font(family=mainFontFamily, size=24, weight="bold")
+timerFont = font.Font(family=mainFontFamily, size=18, weight="bold")
+winnerFont = font.Font(family=mainFontFamily, size=48, underline=True, weight="bold")
+descFont = font.Font(family=mainFontFamily, size=14)
+locked_font = font.Font(family=mainFontFamily, size=28, weight="bold", underline=True)
+
 
 # Quiz variables
 players = []

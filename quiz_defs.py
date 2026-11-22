@@ -8,6 +8,7 @@ import stateVars
 import config_manager
 
 
+# Command History Management
 def load_saved_history():
     stateVars.command_history = config_manager.load_command_history(stateVars.config)[-7:]
 
@@ -110,10 +111,9 @@ def testLuck():
         pass
 
     currentLuck = "FAIL!"
-    titleFont = font.Font(family=stateVars.mainFontFamily, size=28, underline=True, weight="bold")
     luckLabel = tk.Label(luckPopup,
         text=currentLuck,
-        font=titleFont,
+        font=stateVars.titleFont,
         bg=stateVars.background_colour,
         fg=stateVars.foreground_colour,
         wraplength=250,
@@ -144,7 +144,7 @@ def testLuck():
 
 # About Me
 def openMePages():
-    webbrowser.open_new("https://github.com/sadgituser")
+    webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp")
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
     webbrowser.open_new("mailto:kavi@mistrypi.dev")
 
@@ -188,7 +188,7 @@ def print_term(text):
 def clear_term():
     stateVars.termText.config(state="normal")
     stateVars.termText.delete("1.0", "end")
-    stateVars.termText.insert("end", "CRT OS v1.7\nType 'help' for commands. \n\n>")
+    stateVars.termText.insert("end", "CRT OS v1.7\nType 'help' for commands. \n\n> ")
     stateVars.termText.config(state="disabled")
 
 def load_playerlist():
@@ -235,7 +235,7 @@ def preface_quiz():
         msg += "Players and questions loaded... \nQuiz ready\n"
         stateVars.quiz_ready = True
     elif stateVars.questions and not stateVars.players:
-        msg += "Questions loaded \nPlayers still to be loaded, load players with 'quiz player load' or 'quiz player dfault' for default players\n"
+        msg += "Questions loaded \nPlayers still to be loaded, load players with 'quiz player load' or 'quiz player default' for default players\n"
         stateVars.quiz_ready = False
     elif stateVars.players and not stateVars.questions:
         msg += "Players loaded \nQuestions still to be loaded, load questions with 'quiz question load' or 'quiz question default' for default questions\n"
@@ -385,7 +385,7 @@ def handle_quiz_setup_input(raw_cmd):
         try:
             stateVars.quiz_settings['default_skips'] = int(raw_cmd)
         except ValueError:
-            stateVars.quiz_settings['default_skips'] = 2
+            stateVars.quiz_settings['default_skips'] = 1
         stateVars.quiz_setup_step = 5
         print_term("Enable default last chance on timeout? (y/n):")
     elif stateVars.quiz_setup_step == 5:
@@ -424,7 +424,7 @@ def hide_terminal_for_quiz():
     stateVars.root.focus_set()
 
 def show_terminal_from_quiz():
-    stateVars.termText.place(x=15, y=80, width=(stateVars.rootWidth - 30), height=(stateVars.rootHeight - 200))
+    stateVars.termText.place(x=15, y=80, width=(stateVars.rootWidth - 30), height=(stateVars.rootHeight - 150))
     stateVars.promptLabel.place(x=15, y=(stateVars.rootHeight - 55))
     stateVars.termEntry.place(x=35, y=(stateVars.rootHeight - 55), width=(stateVars.rootWidth - 50), height=30)
     stateVars.crt_canvas.itemconfigure("scanlines", state="normal")
@@ -468,16 +468,14 @@ def show_next_quiz_turn():
     stateVars.quizPauseButton.place_forget()
     stateVars.quizQuitButton.place_forget()
 
-    playerFont = font.Font(family=stateVars.mainFontFamily, size=48, weight="bold", underline=True)
-    statusFont = font.Font(family=stateVars.mainFontFamily, size=17)
 
-    stateVars.quizPlayerLabel.config(text=player['name'], fg=stateVars.foreground_colour, font=playerFont)
+    stateVars.quizPlayerLabel.config(text=player['name'], fg=stateVars.foreground_colour, font=stateVars.playerFont)
     stateVars.quizPlayerLabel.place(x=(stateVars.rootWidth // 2), y=30, anchor="n")
 
     status_text = f"Skips Left: {player['skips']}"
     if stateVars.quiz_settings['default_last_chance']:
         status_text += f" | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
-    stateVars.quizStatusLabel.config(text=status_text, fg=stateVars.foreground_colour, font=statusFont)
+    stateVars.quizStatusLabel.config(text=status_text, fg=stateVars.foreground_colour, font=stateVars.statusFont)
     stateVars.quizStatusLabel.place(x=(stateVars.rootWidth // 2), y=150, anchor="n")
 
     stateVars.root.unbind("<Key>")
@@ -487,20 +485,15 @@ def start_actual_question():
     player = stateVars.quiz_active_players[stateVars.current_player_idx]
     question = stateVars.quiz_active_questions[stateVars.current_question_idx]
 
-    playerFont = font.Font(family=stateVars.mainFontFamily, size=48, weight="bold", underline=True)
-    statusFont = font.Font(family=stateVars.mainFontFamily, size=17)
-    questionFont = font.Font(family=stateVars.mainFontFamily, size=24, weight="bold")
-    timerFont = font.Font(family=stateVars.mainFontFamily, size=18, weight="bold")
-
-    stateVars.quizPlayerLabel.config(text=player['name'], fg=stateVars.foreground_colour, font=playerFont)
+    stateVars.quizPlayerLabel.config(text=player['name'], fg=stateVars.foreground_colour, font=stateVars.playerFont)
     stateVars.quizPlayerLabel.place(x=(stateVars.rootWidth // 2), y=15, anchor="n")
-    stateVars.quizQuestionLabel.config(text=question, fg=stateVars.foreground_colour, font=questionFont)
+    stateVars.quizQuestionLabel.config(text=question, fg=stateVars.foreground_colour, font=stateVars.questionFont)
     stateVars.quizQuestionLabel.place(x=(stateVars.rootWidth // 2), y=120, anchor="n")
 
     status_text = f"Skips Left: {player['skips']}"
     if stateVars.quiz_settings['default_last_chance']:
         status_text += f" | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
-    stateVars.quizStatusLabel.config(text=status_text, fg=stateVars.foreground_colour, font=statusFont)
+    stateVars.quizStatusLabel.config(text=status_text, fg=stateVars.foreground_colour, font=stateVars.statusFont)
     stateVars.quizStatusLabel.place(x=(stateVars.rootWidth // 2), y=330, anchor="n")
 
     if stateVars.current_timer_id:
@@ -508,7 +501,7 @@ def start_actual_question():
         stateVars.current_timer_id = None
 
     stateVars.time_remaining = stateVars.quiz_settings['time_limit']
-    stateVars.quizTimerLabel.config(text=f"Time: {stateVars.time_remaining}s", fg=stateVars.foreground_colour, font=timerFont)
+    stateVars.quizTimerLabel.config(text=f"Time Remaining: {stateVars.time_remaining}s", fg=stateVars.foreground_colour, font=stateVars.timerFont)
     stateVars.quizTimerLabel.place(x=(stateVars.rootWidth // 2), y=410, anchor="n")
 
     stateVars.quizPauseButton.place(x=(stateVars.rootWidth // 2 - 110), y=500, width=100, height=40)
@@ -522,7 +515,7 @@ def update_quiz_timer():
         return
     if stateVars.time_remaining > 0:
         stateVars.time_remaining -= 1
-        stateVars.quizTimerLabel.config(text=f"Time: {stateVars.time_remaining}s")
+        stateVars.quizTimerLabel.config(text=f"Time Remaining: {stateVars.time_remaining}s")
         stateVars.current_timer_id = stateVars.root.after(1000, update_quiz_timer)
     else:
         handle_timeout()
@@ -537,8 +530,6 @@ def handle_timeout():
     prepare_for_next_turn()
 
 def flash_screen(colour, message):
-    winnerFont = font.Font(family=stateVars.mainFontFamily, size=48, underline=True, weight="bold")
-
     stateVars.waiting_for_next = True
     if stateVars.current_timer_id:
         stateVars.root.after_cancel(stateVars.current_timer_id)
@@ -547,7 +538,7 @@ def flash_screen(colour, message):
     stateVars.root.configure(bg=colour)
     stateVars.crt_canvas.configure(bg=colour)
     stateVars.quizPlayerLabel.config(bg=colour, fg="#000000")
-    stateVars.quizQuestionLabel.config(bg=colour, fg="#000000", font=winnerFont)
+    stateVars.quizQuestionLabel.config(bg=colour, fg="#000000", font=stateVars.winnerFont)
     stateVars.quizTimerLabel.config(bg=colour, fg="#000000")
     stateVars.quizStatusLabel.config(bg=colour, fg="#000000")
     stateVars.clockLabel.config(bg=colour, fg="#000000")
@@ -560,27 +551,15 @@ def prepare_for_next_turn():
     stateVars.waiting_for_next = True
 
 def reset_screen_colours():
-
-    playerFont = font.Font(family=stateVars.mainFontFamily, size=48, weight="bold", underline=True)
-    questionFont = font.Font(family=stateVars.mainFontFamily, size=24, weight="bold")
-    timerFont = font.Font(family=stateVars.mainFontFamily, size=18, weight="bold")
-    statusFont = font.Font(family=stateVars.mainFontFamily, size=17)
-    descFont = font.Font(family=stateVars.mainFontFamily, size=14)
-
     stateVars.root.configure(bg=stateVars.background_colour)
     stateVars.crt_canvas.configure(bg=stateVars.background_colour)
-    stateVars.quizPlayerLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=playerFont)
-    stateVars.quizQuestionLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=questionFont)
-    stateVars.quizTimerLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=timerFont)
-    stateVars.quizStatusLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=statusFont)
-    stateVars.clockLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=descFont)
+    stateVars.quizPlayerLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=stateVars.playerFont)
+    stateVars.quizQuestionLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=stateVars.questionFont)
+    stateVars.quizTimerLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=stateVars.timerFont)
+    stateVars.quizStatusLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=stateVars.statusFont)
+    stateVars.clockLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=stateVars.descFont)
 
 def handle_quiz_keypress(event):
-    playerFont = font.Font(family=stateVars.mainFontFamily, size=48, weight="bold", underline=True)
-    questionFont = font.Font(family=stateVars.mainFontFamily, size=24, weight="bold")
-    statusFont = font.Font(family=stateVars.mainFontFamily, size=17)
-    timerFont = font.Font(family=stateVars.mainFontFamily, size=18, weight="bold")
-
     player = stateVars.quiz_active_players[stateVars.current_player_idx]
     key = event.char.lower()
 
@@ -590,18 +569,18 @@ def handle_quiz_keypress(event):
             if stateVars.is_last_chance_action:
                 stateVars.is_last_chance_action = False
                 stateVars.waiting_for_next = False
-                stateVars.quizPlayerLabel.config(text=player['name'], fg=stateVars.foreground_colour, font=playerFont)
+                stateVars.quizPlayerLabel.config(text=player['name'], fg=stateVars.foreground_colour, font=stateVars.playerFont)
                 stateVars.quizPlayerLabel.place(x=(stateVars.rootWidth // 2), y=15, anchor="n")
-                stateVars.quizQuestionLabel.config(text=stateVars.quiz_active_questions[stateVars.current_question_idx], fg=stateVars.foreground_colour, font=questionFont)
+                stateVars.quizQuestionLabel.config(text=stateVars.quiz_active_questions[stateVars.current_question_idx], fg=stateVars.foreground_colour, font=stateVars.questionFont)
                 stateVars.quizQuestionLabel.place(x=(stateVars.rootWidth // 2), y=120, anchor="n")
 
                 status_text = f"Skips Left: {player['skips']}"
                 if stateVars.quiz_settings['default_last_chance']:
                     status_text += f" | Last Chance: {'FINAL CHANCE' if player['last_chance'] else 'NO'}"
-                stateVars.quizStatusLabel.config(text=status_text, fg=stateVars.foreground_colour, font=statusFont)
+                stateVars.quizStatusLabel.config(text=status_text, fg=stateVars.foreground_colour, font=stateVars.statusFont)
                 stateVars.quizStatusLabel.place(x=(stateVars.rootWidth // 2), y=330, anchor="n")
 
-                stateVars.quizTimerLabel.config(text=f"Time Remaining: {stateVars.time_remaining}s", fg=stateVars.foreground_colour, font=timerFont)
+                stateVars.quizTimerLabel.config(text=f"Time Remaining: {stateVars.time_remaining}s", fg=stateVars.foreground_colour, font=stateVars.timerFont)
                 stateVars.quizTimerLabel.place(x=(stateVars.rootWidth // 2), y=410, anchor="n")
 
                 stateVars.quizPauseButton.place(x=(stateVars.rootWidth // 2 - 110), y=500, width=100, height=40)
@@ -651,14 +630,12 @@ def handle_quiz_keypress(event):
             player['last_chance'] = True
             stateVars.time_remaining += 5
             stateVars.is_last_chance_action = True
-            stateVars.quizTimerLabel.config(text=f"Time: {stateVars.time_remaining}s")
+            stateVars.quizTimerLabel.config(text=f"Time Remaining: {stateVars.time_remaining}s")
             flash_screen("#8B0000", "LAST CHANCE TRIGGERED")
 
     return "break"
 
 def show_winner_screen(winner_name):
-    winnerFont = font.Font(family=stateVars.mainFontFamily, size=48, underline=True, weight="bold")
-
     stateVars.waiting_for_next = True
     stateVars.winner_can_exit = False
     if stateVars.current_timer_id:
@@ -672,7 +649,7 @@ def show_winner_screen(winner_name):
     stateVars.quizPauseButton.place_forget()
     stateVars.quizQuitButton.place_forget()
     
-    stateVars.quizQuestionLabel.config(text=f"WINNER:\n{winner_name}", fg="#FFD700", font=winnerFont)
+    stateVars.quizQuestionLabel.config(text=f"WINNER:\n{winner_name}", fg="#FFD700", font=stateVars.winnerFont)
     stateVars.quizQuestionLabel.place(x=(stateVars.rootWidth // 2), y=(stateVars.rootHeight // 2) - 80, anchor="center")
     
     stateVars.winner_flashing = True
@@ -692,8 +669,6 @@ def flash_winner_colours():
     stateVars.winner_timer_id = stateVars.root.after(250, flash_winner_colours)
 
 def handle_winner_keypress(event):
-    descFont = font.Font(family=stateVars.mainFontFamily, size=14)
-
     if not stateVars.winner_can_exit or event.char.lower() != 'n':
         return "break"
     if stateVars.winner_timer_id:
@@ -703,7 +678,7 @@ def handle_winner_keypress(event):
     stateVars.root.unbind("<Key>")
     stateVars.root.configure(bg=stateVars.background_colour)
     stateVars.crt_canvas.configure(bg=stateVars.background_colour)
-    stateVars.quizQuestionLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=descFont)
+    stateVars.quizQuestionLabel.config(bg=stateVars.background_colour, fg=stateVars.foreground_colour, font=stateVars.descFont)
     stateVars.quizQuestionLabel.place_forget()
     stateVars.titleLabel.place(x=(stateVars.rootWidth // 2), y=20, anchor="n")
     stateVars.crt_canvas.itemconfigure("scanlines", state="normal")
@@ -730,6 +705,7 @@ def end_quiz(msg):
     print_term(msg)
 
 
+# App Locking
 def lock_app(event=None):
     if stateVars.is_locked:
         return "break"
@@ -742,9 +718,7 @@ def lock_app(event=None):
     stateVars.lock_was_paused = stateVars.is_paused
     stateVars.lock_was_waiting = stateVars.waiting_for_next
     
-    stateVars.lock_logo_image = tk.PhotoImage(
-        file=resource_path("logo.png")
-    ).subsample(5, 5)
+    stateVars.lock_logo_image = tk.PhotoImage(file=resource_path("logo.png")).subsample(5, 5)
 
 
     if stateVars.current_timer_id:
@@ -753,76 +727,25 @@ def lock_app(event=None):
 
     stateVars.is_paused = True
 
-    stateVars.lock_frame = tk.Frame(
-        stateVars.root,
-        bg=stateVars.background_colour,
-        bd=0,
-        highlightthickness=0
-    )
+    stateVars.lock_frame = tk.Frame(stateVars.root, bg=stateVars.background_colour, bd=0, highlightthickness=0)
     stateVars.lock_frame.place(x=0, y=0, relwidth=1, relheight=1)
     stateVars.lock_frame.lift()
 
-    tk.Label(
-        stateVars.lock_frame,
-        image=stateVars.lock_logo_image,
-        bg=stateVars.background_colour
-    ).place(relx=0.5, rely=0.30, anchor="center")
+    tk.Label(stateVars.lock_frame, image=stateVars.lock_logo_image, bg=stateVars.background_colour).place(relx=0.5, rely=0.30, anchor="center")
 
-    locked_font = font.Font(
-        family=stateVars.mainFontFamily,
-        size=28,
-        weight="bold",
-        underline=True
+    tk.Label(stateVars.lock_frame, text="LOCKED", font=stateVars.locked_font, bg=stateVars.background_colour, fg=stateVars.foreground_colour).place(relx=0.5, rely=0.43, anchor="center")
 
-    )
+    stateVars.lock_password_entry = tk.Entry(stateVars.lock_frame, show="*", font=(stateVars.mainFontFamily, 16), bg=stateVars.background_colour, fg="#FF4444", insertbackground=stateVars.foreground_colour, justify="center", relief="flat",)
 
-    tk.Label(
-        stateVars.lock_frame,
-        text="LOCKED",
-        font=locked_font,
-        # font=(stateVars.mainFontFamily, 28, "bold"),
-        bg=stateVars.background_colour,
-        fg=stateVars.foreground_colour
-    ).place(relx=0.5, rely=0.43, anchor="center")
-
-    stateVars.lock_password_entry = tk.Entry(
-        stateVars.lock_frame,
-        show="*",
-        font=(stateVars.mainFontFamily, 16),
-        bg=stateVars.background_colour,
-        fg="#FF4444",
-        insertbackground=stateVars.foreground_colour,
-        justify="center",
-        relief="flat",
-    
-    )
     stateVars.lock_password_entry.place(relx=0.5, rely=0.53, width=260, height=30, anchor="center")
    
-    stateVars.lock_error_label = tk.Label(
-        stateVars.lock_frame,
-        text="",
-        bg=stateVars.background_colour,
-        fg="#FF4444"
+    stateVars.lock_error_label = tk.Label(stateVars.lock_frame, text="", bg=stateVars.background_colour, fg="#FF4444")
 
-    )
     stateVars.lock_error_label.place(relx=0.5, rely=0.59, anchor="center")
 
-    tk.Button(
-        stateVars.lock_frame,
-        text="UNLOCK",
-        command=unlock_app,
-        bg="#35C759",
-        fg="#172B1A",
-        activebackground="#28A745",
-        activeforeground="#172B1A",
-        font=(stateVars.mainFontFamily, 12, "bold"),
-        relief="flat",
-        cursor="hand2"
-    ).place(relx=0.5, rely=0.68, width=120, height=35, anchor="center")
+    tk.Button(stateVars.lock_frame, text="UNLOCK", command=unlock_app, bg="#35C759", fg="#172B1A", activebackground="#28A745", activeforeground="#172B1A", font=(stateVars.mainFontFamily, 12, "bold"), relief="flat", cursor="hand2").place(relx=0.5, rely=0.68, width=120, height=35, anchor="center")
 
-    stateVars.lock_password_entry.bind(
-        "<Return>", lambda event: unlock_app()
-    )
+    stateVars.lock_password_entry.bind("<Return>", lambda event: unlock_app())
 
     stateVars.lock_password_entry.focus_set()
 
@@ -837,10 +760,8 @@ def unlock_app():
         stateVars.lock_password_entry.delete(0, tk.END)
         return
 
-
     if not config_manager.update_config(stateVars.config, locked=False):
         stateVars.lock_error_label.config(text="Could not save unlock state.")
-
         return
 
 
@@ -851,137 +772,128 @@ def unlock_app():
     stateVars.is_paused = stateVars.lock_was_paused
     stateVars.waiting_for_next = stateVars.lock_was_waiting
 
-    if ( 
-        not stateVars.is_paused
-        and not stateVars.waiting_for_next
-        and stateVars.quizQuestionLabel.winfo_manager() == "place"
-
-    ):
+    if (not stateVars.is_paused and not stateVars.waiting_for_next and stateVars.quizQuestionLabel.winfo_manager() == "place"):
         stateVars.current_timer_id = stateVars.root.after(1000, update_quiz_timer)
 
 
+# Command Execution
+def show_config():
+    config_text = ["Config: "]
+    for key, value in stateVars.config.items():
+        if key == "password":
+            value = "********"
+        config_text.append(f"{key}: {value}")
+    print_term("\n".join(config_text) + "\n")
+
+def prompt_befores(msg, befores):
+    print_term(msg)
+    stateVars.termEntry.insert(tk.END, befores)
+
+def run_with_a_message(msg, function):
+    print_term(msg)
+    function()
+
+def handle_password_entry(original_command, command_bits):
+    action = command_bits[1].lower() if len(command_bits) >= 2 else ""
+
+    if action == "set":
+        print_to_screen = "Password Set ********" if len(command_bits) >= 3 else "Password Set"
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", print_to_screen)
+        stateVars.termText.config(state="disabled")
+
+        if len(command_bits) < 3 or not command_bits[2].strip():
+            print_term("Usage: password set <new_password>")
+            return
+
+        new_password = command_bits[2].strip()
+        if config_manager.update_config(stateVars.config, password=new_password):
+            print_term("Password Set Successfully")
+        else:
+            print_term("Failed to set password")
+
+    elif action == "clear":
+        stateVars.termText.config(state="normal")
+        stateVars.termText.insert("end", original_command)
+        stateVars.termText.config(state="disabled")
+
+        if config_manager.update_config(stateVars.config, password=""):
+            print_term("Password Cleared Successfully")
+        else:
+            print_term("Failed To Clear Password")
+
+COMMANDS = {
+    "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, config, cls, password \n"),
+    "password": lambda: prompt_befores("Available Commands: set, clear \nCommands must start with 'password '\n", "password "),        
+    "config": show_config,
+    "quiz": lambda: prompt_befores("Available Commands: player, question, start, preface, keys, about \nCommands must start with 'quiz '\n", "quiz "),
+    "quiz preface": preface_quiz,
+    "quiz keys": lambda: print_term("Quiz Key Bindings:\n- 'y': Correct\n- 'i': Incorrect\n- 'p': Skip\n- 'q': Last Chance\n- 'n': Next\n"),
+    "quiz about": lambda: print_term("Quiz Usage & Purpose. Use in front of class or colleagues. For more information, see the README of this project by typing 'about'\n"),
+    "quiz start": start_quiz_setup,
+    "quiz player": lambda: prompt_befores("Available Commands: load, lookup, default \nCommands must start with 'quiz player '\n", "quiz player "),
+    "quiz question": lambda: prompt_befores("Available Commands: load, lookup, default \nCommands must start with 'quiz question '\n", "quiz question "),
+    "quiz player load": load_playerlist,
+    "quiz question load": load_questionlist,
+    "quiz player lookup": show_playerlist,
+    "quiz question lookup": show_questionlist,
+    "quiz player default": load_default_players,
+    "quiz question default": load_default_questions,
+    "suggest": lambda: run_with_a_message("Opening GitHub Issue (Suggest) Template...\n", lambda: webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md")),
+    "bug": lambda: run_with_a_message("Opening GitHub Issue (Bug) Template...\n", lambda: webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
+    "syntax": show_syntax,
+    "rickroll": lambda: run_with_a_message("RICKROLL!\n", lambda: webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
+    "luck": lambda: run_with_a_message("Opening Lucky Gamble...\n", testLuck),
+    "clear": clear_term,
+    "cls": clear_term,
+    "about": lambda: run_with_a_message("CRT-MultiApp!\n", openMePages),
+    "exit": lambda: stateVars.root.destroy(),
+}
 
 def execute_command(e=None):
     if stateVars.is_printing:
         return "break"
 
-    original_cmd = stateVars.termEntry.get().strip()
-    raw_cmd = original_cmd.lower().strip()
+    original_command = stateVars.termEntry.get().strip()
+    raw_cmd = original_command.lower()
     stateVars.termEntry.delete(0, "end")
 
-    if not original_cmd:
+    if not original_command:
         return
 
-    command_parts = original_cmd.split(None, 2)
-
-    is_password_set = (
-        len(command_parts) >= 2
-        and command_parts[0].lower() == "password"
-        and command_parts[1].lower() == "set"
-
-    )
+    command_parts = original_command.split(None, 2)
+    is_password_set = (len(command_parts) >= 2 and command_parts[0].lower() == "password" and command_parts[1].lower() == "set")
 
     if not is_password_set:
-        save_entered_command(original_cmd)
+        save_entered_command(original_command)
 
-    if is_password_set:
-        stateVars.termText.config(state="normal")
-        stateVars.termText.insert("end", "password set ***** " if len (command_parts) >= 3 else "password set")
-        stateVars.termText.config(state="disabled")
-
-        if len(command_parts) < 3 or not command_parts[2].strip():
-            print_term("Usage: password set <new_password>")
-            return
-    
-
-        new_password = command_parts[2].strip()
-
-        if config_manager.update_config(
-            stateVars.config,
-            password=new_password
-
-        ):
-            print_term("Password set successfully")
-        else:
-            print_term("Failed to set password")
-
-        return
-
-    if raw_cmd in ("password clear", "passwordclear"):
-        stateVars.termText.config(state="normal")
-        stateVars.termText.insert("end", original_cmd)
-        stateVars.termText.config(state="disabled")
-
-        if config_manager.update_config(stateVars.config, password=""):
-            print_term("Password cleared successfully")
-        else:
-            print_term("Failed to clear password")
-
-        return
-
-    if raw_cmd == "config":
-        config_output = ["Configuration: "]
-
-        for key, value in stateVars.config.items():
-            if key == "password":
-                value = "*****"
-
-            config_output.append(f"{key}: {value}")
-
-        print_term("\n".join(config_output) + "\n")
-        return
-
-
-    if stateVars.quiz_setup_step > 0:
-        stateVars.termText.config(state="normal")
-        stateVars.termText.insert("end", f"{raw_cmd}\n")
-        stateVars.termText.config(state="disabled")
-        handle_quiz_setup_input(raw_cmd)
+    if is_password_set or raw_cmd in ("password clear", "passwordclear"):
+        if raw_cmd == "passwordclear":
+            command_parts = ["password", "clear"]
+        handle_password_entry(original_command, command_parts)
         return
 
     stateVars.termText.config(state="normal")
-    stateVars.termText.insert("end", f"{raw_cmd}")
+    stateVars.termText.insert("end", f"{raw_cmd}\n" if stateVars.quiz_setup_step > 0 else raw_cmd)
     stateVars.termText.config(state="disabled")
 
-    sub_commands = [c.strip() for c in raw_cmd.split("&&") if c.strip()]
+    if stateVars.quiz_setup_step > 0:
+        handle_quiz_setup_input(raw_cmd)
+        return
 
-    commands = {
-        "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, config, cls, password \n"),
-        "password": lambda: (print_term("Available Commands: set, clear \nCommands must start with 'password'\n"), stateVars.termEntry.insert(tk.END, "password ")),        
-        "config": lambda: execute_config_command(),
-        "quiz": lambda: (print_term("Available Commands: player, question, start, preface, keys, about \nCommands must start with 'quiz '\n"), stateVars.termEntry.insert(tk.END, "quiz ")),
-        "quiz preface": lambda: preface_quiz(),
-        "quiz keys": lambda: print_term("Quiz Key Bindings:\n- 'y': Correct\n- 'i': Incorrect\n- 'p': Skip\n- 'q': Last Chance\n- 'n': Next\n"),
-        "quiz about": lambda: print_term("Quiz Usage & Purpose...\n"),
-        "quiz start": lambda: start_quiz_setup(),
-        "quiz player": lambda: (print_term("Available commands: load, lookup, default\n"), stateVars.termEntry.insert(tk.END, "quiz player ")),
-        "quiz question": lambda: (print_term("Available commands: load, lookup, default\n"), stateVars.termEntry.insert(tk.END, "quiz question ")),
-        "quiz player load": lambda: load_playerlist(),
-        "quiz question load": lambda: load_questionlist(),
-        "quiz player lookup": lambda: show_playerlist(),
-        "quiz question lookup": lambda: show_questionlist(),
-        "quiz player default": lambda: load_default_players(),
-        "quiz question default": lambda: load_default_questions(),
-        "suggest": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
-        "bug": lambda: (print_term("Opening GitHub issue template...\n"), webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md")),
-        "syntax": lambda: show_syntax(),
-        "rickroll": lambda: (print_term("RICKROLL!\n"), webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
-        "luck": lambda: (print_term("Opening Lucky Gamble...\n"), testLuck()),
-        "clear": lambda: (clear_term()),
-        "cls": lambda: (clear_term()),
-        "about": lambda: (print_term("Terra CRT App!\n"), openMePages()),
-        "exit": stateVars.root.destroy
-    }
-
-    for cmd in sub_commands:
-        if cmd in commands:
-            commands[cmd]()
+    for cmd in (c.strip() for c in raw_cmd.split("&&") if c.strip()):
+        action = COMMANDS.get(cmd)
+        if action:
+            action()
         else:
             print_term(f"Unknown command: '{cmd}'. Type 'help'.\n")
             break
+    
+
 
 # This file cannot be run, it is a Python (.py) file with all of the functions that assists main.py working in CRT-MultiApp.
 # This is not a module on PyPI (Python Package Index) eitherm it is only a module that contains the definitions necessary for the main function of CRT-MultiApp's main.py file to work.
 # If you have stumbled across this file somehow and it is not in the same directory as main.py for CRT-MultiApp, then go to:
 # https://github.com/sadgituser/CRT-MultiApp
 # and download the executable from the releases page
+

@@ -21,7 +21,7 @@ The **projected** OS versions will be:
  - Windows (x64)
  - MacOS (15 - Apple Silicon)
  - Linux (Ubuntu)
- - If more **OS**s are requested, then create a [Suggest Issue](https://github.com/sadgituser/CRT-MultiApp/issues/new?template=feature_suggest.md) with the code for the build.yml GitHub Actions file!
+ - If more **OS**s are requested, then create a [Suggest Issue](https://github.com/sadgituser/CRT-MultiApp/issues/new?template=suggest_feature.md) with the code for the build.yml GitHub Actions file!
 
 <p align="center">
 
@@ -54,14 +54,20 @@ If you want to make an issue, then you can go to [Bug Report](https://github.com
 
 If you want to change this code, then make sure that you update stateVars.py (which contains all of the variables needed for main.py and quiz_defs.py) and quiz_defs.py (which contains all of the definitions/functions needed for the main window, CRT functionality and quiz functionality to work)!
 
+</p>
 
-![The icon of my Etsy shop](/Assets/photo3.png)
+<p align="center">
 
+<img src="/Assets/photo3.png" width="100" height="100" alt="The Icon of sadgituser's Etsy Shop">    
+
+</p>
+
+<p align="center">
 
 [Hackclub Assets](https://hackclub.com/brand) & [Music Assets](https://pixabay.com/sound-effects/technology-noisy-computer-hum-34737/) & Terra Fox was snipped and edited from the [Terra](terra.hackclub.com) website! Check it out along with other [HC](https://hackclub.com) projects!
 
 Made for the [Hackclub Terra](https://terra.hackclub.com) project (originally) for [Hackclub](https://hackclub.com).
-It started out with Terra, but it will now be moving onto _[Phantom](https://phantom.hackclub.com)_
+The project had started out on Terra, but is now on _[Phantom](https://phantom.hackclub.com)_
 
 </p>
 

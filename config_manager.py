@@ -64,10 +64,12 @@ def save_config(config, config_file=CONFIG_FILE):
         return True
 
     except (OSError, TypeError, ValueError) as error:
-        print(f"File not saved: {error}")
+        import quiz_defs
+        quiz_defs.print_term(f"File not saved: {error}")
 
-    if temporary_file.exists():
-        temporary_file.unlink()
+    finally:
+        if temporary_file.exists():
+            temporary_file.unlink()
 
     return False
 
@@ -109,7 +111,8 @@ def load_config(config_file=CONFIG_FILE):
 
         return config
     except (OSError, json.JSONDecodeError, ValueError) as error:
-        print(f"Config could not be loaded: {error}")
+        import quiz_defs
+        quiz_defs.print_term(f"Config could not be loaded: {error}")
 
         config = DEFAULT_CONFIG.copy()
         save_config(config, config_file)
