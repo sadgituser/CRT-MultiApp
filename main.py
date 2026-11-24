@@ -59,11 +59,22 @@ questionFont = font.Font(family=stateVars.mainFontFamily, size=24, weight="bold"
 timerFont = font.Font(family=stateVars.mainFontFamily, size=18, weight="bold")
 statusFont = font.Font(family=stateVars.mainFontFamily, size=17)
 winnerFont = font.Font(family=stateVars.mainFontFamily, size=48, underline=True, weight="bold")
+locked_font = font.Font(family=stateVars.mainFontFamily, size=12)
+
+stateVars.titleFont = titleFont
+stateVars.playerFont = playerFont
+stateVars.statusFont = statusFont
+stateVars.questionFont = questionFont
+stateVars.timerFont = timerFont
+stateVars.winnerFont = winnerFont
+stateVars.descFont = descFont
+stateVars.locked_font = locked_font
+
 
 
 # Widgets
 titleLabel = tk.Label(stateVars.root,
-    text="THE CRT",
+    text="CRT-MultiApp",
     font=titleFont,
     bg=stateVars.background_colour,
     fg=stateVars.foreground_colour,
@@ -91,7 +102,7 @@ termText = tk.Text(stateVars.root,
     relief="flat"
 )
 termText.place(x=15, y=80, width=(stateVars.rootWidth - 30), height=(stateVars.rootHeight - 150))
-termText.insert("end", "CRT OS v1.7\nType 'help' for commands. \n\n> ")
+termText.insert("end", f"CRT OS v{stateVars.versionNum}\nType 'help' for commands. \n\n> ")
 termText.config(state="disabled")
 stateVars.termText = termText
 
@@ -192,16 +203,13 @@ quiz_defs.update_clock()
 termEntry.bind("<Return>", quiz_defs.execute_command)
 
 # lock keybind
-
 stateVars.root.bind(
     "<KeyPress-semicolon>",
     quiz_defs.lock_app,
     add="+"
-
 )
 
 #restore the lock screen
-
 if stateVars.config.get("locked", False):
     quiz_defs.lock_app()
 

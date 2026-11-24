@@ -29,16 +29,31 @@ active_background_colour, active_foreground_colour = "#00CC00", "#000000"
 mainFontFamily = "Consolas"
 app_icon = "app-icon.ico"
 bg_music_path = "bg_music.mp3"
+typeSpeed = 25
+versionNum = 1.8
+waiting_for_custom_speed = False
 
 # Fonts
-titleFont = font.Font(family=mainFontFamily, size=28, underline=True, weight="bold")
-playerFont = font.Font(family=mainFontFamily, size=48, weight="bold", underline=True)
-statusFont = font.Font(family=mainFontFamily, size=17)
-questionFont = font.Font(family=mainFontFamily, size=24, weight="bold")
-timerFont = font.Font(family=mainFontFamily, size=18, weight="bold")
-winnerFont = font.Font(family=mainFontFamily, size=48, underline=True, weight="bold")
-descFont = font.Font(family=mainFontFamily, size=14)
-locked_font = font.Font(family=mainFontFamily, size=28, weight="bold", underline=True)
+titleFont = None
+playerFont = None
+statusFont = None
+questionFont = None
+timerFont = None
+winnerFont = None
+descFont = None
+locked_font = None
+# Colours
+current_colour_index = 0
+colour_preset_names = ["green", "red", "blue", "turquoise", "yellow", "magenta", "gray"]
+colour_presets = {
+    "green": ["#00FF00", "#00DD00", "#22FF22", "#00EE00", "#1BF81B", "#0DD30D"],
+    "red": ["#FF0000", "#FA2222", "#FF2424", "#E00000", "#DD0B0B", "#C70000"],
+    "blue": ["#0000FF", "#1414F8", "#0D0DEE", "#2222FF", "#0000C2", "#0F0FE6"],
+    "turquoise": ["#40E0D0", "#30F0DD", "#22D3C1", "#0AC0AE", "#2EFFEA", "#40E0D0"],
+    "yellow": ["#FFFF00", "#E4E424", "#CFCF00", "#FFFF52", "#E6E62D", "#C7C712"],
+    "magenta": ["#FF00FF", "#F026F0", "#FF4DFF", "#C703C7", "#DB28DB", "#D448D4"],
+    "gray": ["#696969", "#868686", "#A1A1A1", "#AAAAAA", "#5E5E5E", "#555555"]
+}
 
 
 # Quiz variables
@@ -79,7 +94,8 @@ lock_was_paused = False
 lock_was_waiting = False
 lock_previous_key_binding = None 
 
-#command history
+
+# Command history
 command_history = []
 history_index = 0
 current_input = ""

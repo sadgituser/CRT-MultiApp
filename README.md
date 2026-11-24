@@ -7,7 +7,7 @@ Originally a quiz app made in Python with TKinter where you can put in a list of
 But it is now a general fun app that has a CRT style screen and a bunch of cool options via a Text Terminal type interface.
 
 Code written by: **[sadgituser](https://github.com/sadgituser)** and **[iamthehunter](https://github.com/iamthehunter1)**.
-Code written by different contributors can be found **[HERE](https://github.com/sadgituser/CRT-MultiApp/blob/main/CONTRIBUTORS.md)!**
+Code written by different contributors can be found **[HERE](CONTRIBUTORS.md)!**
 
 There are also a bunch of other features too! Such as _rickrolls_, a _gamble_ feature and default player and quiz questions, along with other projected ideas that aren't do do with the main **quiz** function. I am planning on adding more features (such as gamemodes other than the main quiz) later, and these will appear in the README! To get a full list of commands while in the terminal, you can type 'help', and to learn how to use the commands, type 'syntax'!
 
@@ -68,6 +68,8 @@ If you want to change this code, then make sure that you update stateVars.py (wh
 
 Made for the [Hackclub Terra](https://terra.hackclub.com) project (originally) for [Hackclub](https://hackclub.com).
 The project had started out on Terra, but is now on _[Phantom](https://phantom.hackclub.com)_
+
+[THE LICENSE](LICENSE)
 
 </p>
 

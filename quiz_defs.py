@@ -8,6 +8,16 @@ import stateVars
 import config_manager
 
 
+# Early defs in main.py
+def resource_path(relative_path):
+    import sys, os
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(__file__)
+    return os.path.join(base_path, "Assets", relative_path)
+
+
 # Command History Management
 def load_saved_history():
     stateVars.command_history = config_manager.load_command_history(stateVars.config)[-7:]
@@ -68,15 +78,6 @@ def history_down(event=None):
     return "break"
 
 
-# Early defs in main.py
-def resource_path(relative_path):
-    import sys, os
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.dirname(__file__)
-    return os.path.join(base_path, "Assets", relative_path)
-
 # CRT
 def animate_crt_beam():
     stateVars.scanline_y += 3
@@ -90,13 +91,62 @@ def update_clock():
     stateVars.clockLabel.config(text=current_time)
     stateVars.root.after(500, update_clock)
 
+
+flicker = None
+
 def apply_crt_flicker():
-    glow_colours = ["#00FF00", "#00DD00", "#22FF22", "#00EE00", "#1BF81B", "#0DD30D"]
+    global flicker
+    preset_name = stateVars.colour_preset_names[stateVars.current_colour_index]
+    glow_colours = stateVars.colour_presets[preset_name]
     chosen_colour = random.choice(glow_colours)
     stateVars.titleLabel.configure(fg=chosen_colour)
     stateVars.termText.configure(fg=chosen_colour)
     stateVars.termEntry.configure(fg=chosen_colour)
-    stateVars.root.after(random.randint(10, 100), apply_crt_flicker)
+    flicker = stateVars.root.after(random.randint(10, 100), apply_crt_flicker)
+
+def stop_crt_flicker():
+    global flicker
+    if flicker is not None:
+        stateVars.root.after_cancel(flicker)
+        flicker = None
+    stateVars.titleLabel.configure(fg=stateVars.foreground_colour)
+    stateVars.termText.configure(fg=stateVars.foreground_colour)
+    stateVars.termEntry.configure(fg=stateVars.foreground_colour)
+
+def change_colour():
+    stateVars.current_colour_index = (stateVars.current_colour_index + 1) % len(stateVars.colour_preset_names)
+    preset_name = stateVars.colour_preset_names[stateVars.current_colour_index]
+    stateVars.foreground_colour = stateVars.colour_presets[preset_name][0]
+
+    stateVars.clockLabel.configure(fg=stateVars.foreground_colour)
+    stateVars.promptLabel.configure(fg=stateVars.foreground_colour)
+    stateVars.termEntry.configure(
+        fg=stateVars.foreground_colour,
+        insertbackground=stateVars.foreground_colour,
+        highlightbackground=stateVars.foreground_colour
+    )
+    stateVars.termText.configure(insertbackground=stateVars.foreground_colour)
+    print_term(f"Colour preset changed to {preset_name}\n")
+
+def set_speed(typingSpeed):
+    stateVars.typeSpeed = typingSpeed
+
+def prompt_custom_speed():
+    stateVars.waiting_for_custom_speed = True
+    print_term("Enter custom typing delay in ms (e.g. 5 to 200):")
+
+def handle_custom_speed_input(raw_cmd):
+    stateVars.waiting_for_custom_speed = False
+    try:
+        speed_ms = int(raw_cmd)
+        if speed_ms < 1:
+            raise ValueError("Speed must be positive")
+        set_speed(speed_ms)
+        print_term(f"Custom speed set to {speed_ms}ms")
+    except ValueError:
+        print_term("Invalid number. Keeping current speed.")
+
+
 
 # Gamble
 def testLuck():
@@ -166,7 +216,7 @@ def process_print_queue():
             stateVars.termText.insert("end", remaining_text[0])
             stateVars.termText.see("end")
             stateVars.termText.config(state="disabled")
-            stateVars.root.after(25, lambda: type_chars(remaining_text[1:]))
+            stateVars.root.after(stateVars.typeSpeed, lambda: type_chars(remaining_text[1:]))
         else:
             stateVars.termText.config(state="normal")
             if stateVars.print_queue:
@@ -188,7 +238,7 @@ def print_term(text):
 def clear_term():
     stateVars.termText.config(state="normal")
     stateVars.termText.delete("1.0", "end")
-    stateVars.termText.insert("end", "CRT OS v1.7\nType 'help' for commands. \n\n> ")
+    stateVars.termText.insert("end", f"CRT OS v{stateVars.versionNum}\nType 'help' for commands. \n\n> ")
     stateVars.termText.config(state="disabled")
 
 def load_playerlist():
@@ -248,6 +298,7 @@ def preface_quiz():
 def show_syntax():
     syn = "To use basic commands (such as 'rickroll' or 'exit'), just type the command. For more complex commands like 'quiz', type in 'quiz', followed by a space and then the next command suggested by 'Available commands' or what the program suggests for you to do!"
     print_term(syn)
+
 
 
 # Quiz components
@@ -743,7 +794,7 @@ def lock_app(event=None):
 
     stateVars.lock_error_label.place(relx=0.5, rely=0.59, anchor="center")
 
-    tk.Button(stateVars.lock_frame, text="UNLOCK", command=unlock_app, bg="#35C759", fg="#172B1A", activebackground="#28A745", activeforeground="#172B1A", font=(stateVars.mainFontFamily, 12, "bold"), relief="flat", cursor="hand2").place(relx=0.5, rely=0.68, width=120, height=35, anchor="center")
+    tk.Button(stateVars.lock_frame, text="UNLOCK", command=unlock_app, bg="#35C759", fg="#172B1A", activebackground="#28A745", activeforeground="#172B1A", font=(stateVars.mainFontFamily, 12, "bold"), relief="raised", cursor="hand2").place(relx=0.5, rely=0.68, width=120, height=35, anchor="center")
 
     stateVars.lock_password_entry.bind("<Return>", lambda event: unlock_app())
 
@@ -823,9 +874,11 @@ def handle_password_entry(original_command, command_bits):
             print_term("Failed To Clear Password")
 
 COMMANDS = {
-    "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clear, about, exit, config, cls, password \n"),
+    "help": lambda: print_term("Commands: quiz, syntax, rickroll, suggest, bug, luck, clock, flicker, beam, speed, colour change, clear, about, exit, config, cls, password \n"),
     "password": lambda: prompt_befores("Available Commands: set, clear \nCommands must start with 'password '\n", "password "),        
-    "config": show_config,
+    "config": lambda: prompt_befores("Available Commands: show, reset \nCommands must start with 'config '\n", "config "),
+    "config show": show_config,
+    "config reset": lambda: run_with_a_message("Config reset with defaults\n", lambda: config_manager.reset_default_config()),
     "quiz": lambda: prompt_befores("Available Commands: player, question, start, preface, keys, about \nCommands must start with 'quiz '\n", "quiz "),
     "quiz preface": preface_quiz,
     "quiz keys": lambda: print_term("Quiz Key Bindings:\n- 'y': Correct\n- 'i': Incorrect\n- 'p': Skip\n- 'q': Last Chance\n- 'n': Next\n"),
@@ -843,11 +896,28 @@ COMMANDS = {
     "bug": lambda: run_with_a_message("Opening GitHub Issue (Bug) Template...\n", lambda: webbrowser.open_new("https://github.com/sadgituser/CRT-MultiApp/issues/new?template=bug_report.md")),
     "syntax": show_syntax,
     "rickroll": lambda: run_with_a_message("RICKROLL!\n", lambda: webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")),
-    "luck": lambda: run_with_a_message("Opening Lucky Gamble...\n", testLuck),
+    "luck": lambda: run_with_a_message("Opening Lucky Gamble...\n", lambda: testLuck()),
     "clear": clear_term,
     "cls": clear_term,
-    "about": lambda: run_with_a_message("CRT-MultiApp!\n", openMePages),
+    "about": lambda: run_with_a_message("CRT-MultiApp!\n", lambda: openMePages()),
     "exit": lambda: stateVars.root.destroy(),
+    # Customisation
+    "clock": lambda: prompt_befores("Available commands: show, hide\n", "clock "),
+    "clock show": lambda: run_with_a_message("Showing clock\n", lambda: stateVars.clockLabel.place(x=(stateVars.rootWidth - 15), y=20, anchor="ne")), 
+    "clock hide": lambda: run_with_a_message("Hiding clock\n", lambda: stateVars.clockLabel.place_forget()),
+    "flicker": lambda: prompt_befores("Available commands: start, stop\n", "flicker "),
+    "flicker start": lambda: run_with_a_message("Flickering started\n", lambda: apply_crt_flicker()), 
+    "flicker stop": lambda: run_with_a_message("Flickering stopped\n", lambda: stop_crt_flicker()),
+    "beam": lambda: prompt_befores("Available commands: start, stop\n", "beam "),
+    "beam start": lambda: run_with_a_message("Beaming\n", lambda: stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="normal")), 
+    "beam stop": lambda: run_with_a_message("Beam stopped\n", lambda: stateVars.crt_canvas.itemconfigure(stateVars.moving_scanline, state="hidden")),
+    "speed": lambda: prompt_befores("Available commands: fast, default, slow, custom\n", "speed "),
+    "speed fast": lambda: run_with_a_message("Speed set to fast (10ms)\n", lambda: set_speed(10)), 
+    "speed default": lambda: run_with_a_message("Speed set to default (25ms)\n", lambda: set_speed(25)),
+    "speed slow": lambda: run_with_a_message("Speed set to slow (45ms)\n", lambda: set_speed(45)),
+    "speed custom": lambda: prompt_custom_speed(),
+    "colour": lambda: prompt_befores("Unknown command 'colour', maybe you meant 'colour change'\n", "colour change"),
+    "colour change": lambda: change_colour(),
 }
 
 def execute_command(e=None):
@@ -881,6 +951,10 @@ def execute_command(e=None):
         handle_quiz_setup_input(raw_cmd)
         return
 
+    if stateVars.waiting_for_custom_speed:
+        handle_custom_speed_input(raw_cmd)
+        return
+
     for cmd in (c.strip() for c in raw_cmd.split("&&") if c.strip()):
         action = COMMANDS.get(cmd)
         if action:
@@ -896,4 +970,3 @@ def execute_command(e=None):
 # If you have stumbled across this file somehow and it is not in the same directory as main.py for CRT-MultiApp, then go to:
 # https://github.com/sadgituser/CRT-MultiApp
 # and download the executable from the releases page
-

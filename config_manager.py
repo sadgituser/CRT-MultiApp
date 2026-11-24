@@ -73,7 +73,6 @@ def save_config(config, config_file=CONFIG_FILE):
 
     return False
 
-
 def load_config(config_file=CONFIG_FILE):
     """Loads configuration with the defaults"""
 
@@ -119,17 +118,21 @@ def load_config(config_file=CONFIG_FILE):
         
         return config
 
+def reset_default_config():
+    global CONFIG_FILE
+    CONFIG_FILE = DEFAULT_CONFIG
+
 def update_config(config, **updates):
     """updates selected values and saves them"""
 
     for key, value in updates.items():
         if key not in DEFAULT_CONFIG:
-            raise ValueError(f"unknown config setting '{key}' ")
+            raise ValueError(f"Unknown config setting '{key}' ")
         
         expected_type = type(DEFAULT_CONFIG[key])
 
         if not isinstance(value, expected_type):
-            raise TypeError(f"config setting '{key}' must be " 
+            raise TypeError(f"Config setting '{key}' must be " 
             f"{expected_type.__name__}"
             )
 
@@ -171,3 +174,4 @@ def load_command_history(config):
         if config.get(f"command_history_{index + 1}", "").strip()
 
     ]
+
